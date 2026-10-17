@@ -151,4 +151,6 @@ Please run the setup steps above on your PC and tell me if anything breaks or is
 | `Unknown database 'college_maintenance'` | You haven't run `schema.sql` yet (step 2). |
 | `cannot find symbol` when compiling | A file is missing or unsaved. Compile all of `src\*.java`. |
 
+**The test cases are not removed from the tables in the database**
+
 Ask me anything! If something is confusing, that's a problem with my explanation, not with you. 🙂
