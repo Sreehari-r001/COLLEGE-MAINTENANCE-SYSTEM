@@ -1,4 +1,4 @@
-
+package model;
 public class MaintenanceRequest {
     private int requestId;
     private String department;
@@ -25,7 +25,7 @@ public class MaintenanceRequest {
         System.out.println("Category: " + category);
 
         if (description == null || description.trim().isEmpty()) {
-            System.out.println("Description: Not provided");
+            System.out.println("Description Not given");
         } else {
             System.out.println("Description: " + description);
         }
@@ -54,8 +54,8 @@ public class MaintenanceRequest {
         this.status = "Assigned";
         System.out.println("Staff assigned successfully.");
     } else {
-        System.out.println("Only approved requests can be assigned.");
-    }
+        System.out.println("request not approved yet.");
+      }
 }
 
     public void startWork() {
@@ -63,7 +63,7 @@ public class MaintenanceRequest {
             status = "In Progress";
             System.out.println("Maintenance work started.");
         } else {
-            System.out.println("Request must be assigned first.");
+            System.out.println("Request not assigned.");
         }
     }
 }

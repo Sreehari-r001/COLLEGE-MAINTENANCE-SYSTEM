@@ -1,4 +1,4 @@
-
+package model;
 public class HOD extends User {
 
     public HOD(String name, String email) {
