@@ -30,7 +30,7 @@ public class HodReviewFrame extends JFrame {
         JPanel mainPanel = new JPanel(new BorderLayout());
         mainPanel.setBackground(BACKGROUND);
 
-        // ================= LEFT SIDEBAR =================
+        // LEFT SIDEBAR
         JPanel sidebar = new JPanel();
         sidebar.setPreferredSize(new Dimension(225, 0));
         sidebar.setBackground(DARK_GREEN);
@@ -59,7 +59,6 @@ public class HodReviewFrame extends JFrame {
         sidebar.add(workspace);
         sidebar.add(Box.createVerticalStrut(15));
 
-        // Dashboard button
         JButton dashboardButton =
             createSidebarButton("Dashboard", false);
 
@@ -68,7 +67,6 @@ public class HodReviewFrame extends JFrame {
 
         sidebar.add(Box.createVerticalStrut(10));
 
-        // Current page
         JButton reviewButton =
             createSidebarButton("Review Requests", true);
 
@@ -97,7 +95,7 @@ public class HodReviewFrame extends JFrame {
         logoutButton.addActionListener(e -> logout());
         sidebar.add(logoutButton);
 
-        // ================= MAIN CONTENT =================
+        // MAIN CONTENT
         JPanel content = new JPanel(new BorderLayout(0, 20));
         content.setBackground(BACKGROUND);
         content.setBorder(
@@ -123,7 +121,7 @@ public class HodReviewFrame extends JFrame {
 
         content.add(heading, BorderLayout.NORTH);
 
-        // ================= REQUEST TABLE =================
+        // REQUEST TABLE
         JPanel tablePanel = new JPanel(new BorderLayout(0, 15));
         tablePanel.setBackground(WHITE);
         tablePanel.setBorder(
@@ -180,14 +178,14 @@ public class HodReviewFrame extends JFrame {
         );
         requestTable.getTableHeader().setReorderingAllowed(false);
 
-        int[] widths = {90, 130, 75, 110, 110, 210, 100};
+        int[] widths = {90, 180, 90, 110, 110, 210, 100};
 
         for (int i = 0; i < widths.length; i++) {
             requestTable.getColumnModel()
                 .getColumn(i).setPreferredWidth(widths[i]);
         }
 
-        // Status cell colours
+        // STATUS CELL COLOURS
         requestTable.getColumnModel().getColumn(6).setCellRenderer(
             new DefaultTableCellRenderer() {
                 @Override
@@ -256,7 +254,7 @@ public class HodReviewFrame extends JFrame {
             BorderLayout.CENTER
         );
 
-        // ================= ACTION BUTTONS =================
+        // ACTION BUTTONS
         JPanel buttons = new JPanel(
             new FlowLayout(FlowLayout.RIGHT, 10, 0)
         );
@@ -303,8 +301,8 @@ public class HodReviewFrame extends JFrame {
 
             model.addRow(new Object[] {
                 request.id,
-                "-",
-                "-",
+                request.email,
+                request.role,
                 request.department,
                 request.category,
                 request.description,
@@ -373,7 +371,6 @@ public class HodReviewFrame extends JFrame {
             return;
         }
 
-        // Update the shared request object
         request.status = newStatus;
 
         refreshTable();
@@ -424,9 +421,7 @@ public class HodReviewFrame extends JFrame {
         button.setMaximumSize(new Dimension(200, 42));
         button.setPreferredSize(new Dimension(190, 42));
         button.setAlignmentX(Component.LEFT_ALIGNMENT);
-        button.setCursor(
-            new Cursor(Cursor.HAND_CURSOR)
-        );
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
         return button;
     }
@@ -455,9 +450,7 @@ public class HodReviewFrame extends JFrame {
         button.setBorder(
             BorderFactory.createEmptyBorder(11, 16, 11, 16)
         );
-        button.setCursor(
-            new Cursor(Cursor.HAND_CURSOR)
-        );
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
     }
 
     private void logout() {

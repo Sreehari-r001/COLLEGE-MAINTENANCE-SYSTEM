@@ -4,17 +4,12 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.util.ArrayList;
 
 public class StudentDashboard extends JFrame {
 
     private String userEmail;
     private String userRole;
 
-    private final ArrayList<MaintenanceRequestUI> myRequests =
-            new ArrayList<>();
-
-    // Sage green theme
     private final Color DARK_GREEN = new Color(48, 76, 55);
     private final Color SAGE_GREEN = new Color(91, 125, 97);
     private final Color LIGHT_SAGE = new Color(232, 240, 232);
@@ -42,28 +37,6 @@ public class StudentDashboard extends JFrame {
         userEmail = email;
         userRole = role;
 
-        // Temporary sample requests for Faculty UI testing.
-        // Student dashboards start with an empty request list.
-        if ("Faculty".equalsIgnoreCase(userRole)) {
-            myRequests.add(new MaintenanceRequestUI(
-                    1001, userEmail, userRole,
-                    "Room 101", "Electrical",
-                    "Ceiling fan not working", "PENDING"
-            ));
-
-            myRequests.add(new MaintenanceRequestUI(
-                    1002, userEmail, userRole,
-                    "Library", "Furniture",
-                    "Broken chair", "PENDING"
-            ));
-
-            myRequests.add(new MaintenanceRequestUI(
-                    1003, userEmail, userRole,
-                    "Computer Lab", "Electrical",
-                    "Faulty power socket", "COMPLETED"
-            ));
-        }
-
         setTitle(userRole + " Dashboard - CampusCare");
         setSize(1100, 700);
         setMinimumSize(new Dimension(900, 600));
@@ -84,7 +57,7 @@ public class StudentDashboard extends JFrame {
 
         root.add(contentPanel, BorderLayout.CENTER);
 
-        add(root);
+        setContentPane(root);
 
         refreshDashboard();
         setVisible(true);
@@ -122,17 +95,14 @@ public class StudentDashboard extends JFrame {
         sidebar.add(menuLabel);
         sidebar.add(Box.createVerticalStrut(12));
 
-        JButton overviewButton = createSidebarButton(
-                "  Overview", true
-        );
+        JButton overviewButton =
+                createSidebarButton("  Overview", true);
 
-        JButton requestsButton = createSidebarButton(
-                "  My Requests", false
-        );
+        JButton requestsButton =
+                createSidebarButton("  My Requests", false);
 
-        JButton submitButton = createSidebarButton(
-                "  +  Submit Request", false
-        );
+        JButton submitButton =
+                createSidebarButton("  +  Submit Request", false);
 
         overviewButton.addActionListener(e -> {
             refreshDashboard();
@@ -180,11 +150,10 @@ public class StudentDashboard extends JFrame {
         sidebar.add(profilePanel);
         sidebar.add(Box.createVerticalStrut(12));
 
-        JButton logoutButton = createSidebarButton(
-                "  Log Out", false
-        );
-        logoutButton.addActionListener(e -> logout());
+        JButton logoutButton =
+                createSidebarButton("  Log Out", false);
 
+        logoutButton.addActionListener(e -> logout());
         sidebar.add(logoutButton);
 
         return sidebar;
@@ -245,9 +214,9 @@ public class StudentDashboard extends JFrame {
         titlePanel.add(Box.createVerticalStrut(7));
         titlePanel.add(subtitle);
 
-        JButton newRequestButton = createPrimaryButton(
-                "+ New Request"
-        );
+        JButton newRequestButton =
+                createPrimaryButton("+ New Request");
+
         newRequestButton.addActionListener(e -> submitRequest());
 
         header.add(titlePanel, BorderLayout.CENTER);
@@ -257,29 +226,37 @@ public class StudentDashboard extends JFrame {
         body.setLayout(new BoxLayout(body, BoxLayout.Y_AXIS));
         body.setOpaque(false);
 
-        JPanel statsPanel = new JPanel(new GridLayout(1, 3, 15, 0));
+        JPanel statsPanel = new JPanel(
+                new GridLayout(1, 3, 15, 0)
+        );
         statsPanel.setOpaque(false);
-        statsPanel.setMaximumSize(new Dimension(
-                Integer.MAX_VALUE, 115
-        ));
+        statsPanel.setMaximumSize(
+                new Dimension(Integer.MAX_VALUE, 115)
+        );
 
         totalValue = new JLabel("0");
         pendingValue = new JLabel("0");
         completedValue = new JLabel("0");
 
         statsPanel.add(createStatCard(
-                "Total Requests", totalValue,
-                "All requests submitted", SAGE_GREEN
+                "Total Requests",
+                totalValue,
+                "All requests submitted",
+                SAGE_GREEN
         ));
 
         statsPanel.add(createStatCard(
-                "Pending Requests", pendingValue,
-                "Awaiting review", new Color(183, 137, 55)
+                "Pending Requests",
+                pendingValue,
+                "Awaiting review",
+                new Color(183, 137, 55)
         ));
 
         statsPanel.add(createStatCard(
-                "Completed Requests", completedValue,
-                "Work marked complete", new Color(65, 133, 91)
+                "Completed Requests",
+                completedValue,
+                "Work marked complete",
+                new Color(65, 133, 91)
         ));
 
         JPanel tableHeader = new JPanel(new BorderLayout());
@@ -291,6 +268,7 @@ public class StudentDashboard extends JFrame {
         recentTitle.setForeground(DARK_GREEN);
 
         JButton viewAllButton = createTextButton("View all");
+
         viewAllButton.addActionListener(e -> {
             refreshDashboard();
             contentLayout.show(contentPanel, "REQUESTS");
@@ -377,16 +355,16 @@ public class StudentDashboard extends JFrame {
         titlePanel.add(Box.createVerticalStrut(7));
         titlePanel.add(subtitle);
 
-        JButton newRequestButton = createPrimaryButton(
-                "+ New Request"
-        );
+        JButton newRequestButton =
+                createPrimaryButton("+ New Request");
+
         newRequestButton.addActionListener(e -> submitRequest());
 
         header.add(titlePanel, BorderLayout.CENTER);
         header.add(newRequestButton, BorderLayout.EAST);
 
         JLabel tableNote = new JLabel(
-                "Request information is available for this session."
+                "Your requests and their latest statuses are shown below."
         );
         tableNote.setFont(new Font("SansSerif", Font.PLAIN, 12));
         tableNote.setForeground(MUTED_TEXT);
@@ -413,9 +391,7 @@ public class StudentDashboard extends JFrame {
 
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
-            public boolean isCellEditable(
-                    int row, int column
-            ) {
+            public boolean isCellEditable(int row, int column) {
                 return false;
             }
         };
@@ -448,11 +424,11 @@ public class StudentDashboard extends JFrame {
         requestTable.getTableHeader().setReorderingAllowed(false);
 
         requestTable.getColumnModel().getColumn(0)
-                .setPreferredWidth(85);
+                .setPreferredWidth(90);
         requestTable.getColumnModel().getColumn(1)
                 .setPreferredWidth(115);
         requestTable.getColumnModel().getColumn(2)
-                .setPreferredWidth(100);
+                .setPreferredWidth(105);
         requestTable.getColumnModel().getColumn(3)
                 .setPreferredWidth(230);
         requestTable.getColumnModel().getColumn(4)
@@ -471,28 +447,32 @@ public class StudentDashboard extends JFrame {
                     ) {
                         Component component =
                                 super.getTableCellRendererComponent(
-                                        table, value, isSelected,
-                                        hasFocus, row, column
+                                        table,
+                                        value,
+                                        isSelected,
+                                        hasFocus,
+                                        row,
+                                        column
                                 );
 
-                        setHorizontalAlignment(
-                                SwingConstants.CENTER
-                        );
+                        setHorizontalAlignment(SwingConstants.CENTER);
 
                         if (!isSelected) {
                             String status = value == null
                                     ? ""
                                     : value.toString();
 
-                            if ("COMPLETED".equals(status)) {
+                            if ("COMPLETED".equalsIgnoreCase(status)) {
                                 component.setForeground(
                                         new Color(49, 120, 76)
                                 );
-                            } else if ("PENDING".equals(status)) {
+                            } else if (
+                                    "PENDING".equalsIgnoreCase(status)) {
                                 component.setForeground(
                                         new Color(165, 119, 38)
                                 );
-                            } else if ("REJECTED".equals(status)) {
+                            } else if (
+                                    "REJECTED".equalsIgnoreCase(status)) {
                                 component.setForeground(
                                         new Color(180, 65, 65)
                                 );
@@ -549,11 +529,9 @@ public class StudentDashboard extends JFrame {
         subtitle.setFont(new Font("SansSerif", Font.PLAIN, 12));
         subtitle.setForeground(MUTED_TEXT);
 
-        // Location field
         JTextField locationField = new JTextField();
         styleInput(locationField);
 
-        // Department dropdown
         String[] departments = {
                 "CSE", "EC", "EEE", "ME", "CE", "Other"
         };
@@ -567,7 +545,6 @@ public class StudentDashboard extends JFrame {
         departmentBox.setBackground(WHITE);
         departmentBox.setForeground(TEXT_COLOR);
 
-        // Complaint category dropdown
         String[] categories = {
                 "Electrical",
                 "Plumbing",
@@ -585,7 +562,6 @@ public class StudentDashboard extends JFrame {
         categoryBox.setBackground(WHITE);
         categoryBox.setForeground(TEXT_COLOR);
 
-        // Description field
         JTextArea descriptionArea = new JTextArea(5, 25);
         descriptionArea.setFont(
                 new Font("SansSerif", Font.PLAIN, 13)
@@ -610,21 +586,17 @@ public class StudentDashboard extends JFrame {
         addFormComponent(form, gbc, row++, heading);
         addFormComponent(form, gbc, row++, subtitle);
 
-        // Department
         addFormLabel(form, gbc, row++, "Department");
         addFormComponent(form, gbc, row++, departmentBox);
 
-        // Location
         addFormLabel(
                 form, gbc, row++, "Location (room or building)"
         );
         addFormComponent(form, gbc, row++, locationField);
 
-        // Category
         addFormLabel(form, gbc, row++, "Category");
         addFormComponent(form, gbc, row++, categoryBox);
 
-        // Description
         addFormLabel(form, gbc, row++, "Describe the problem");
         addFormComponent(form, gbc, row++, descriptionScroll);
 
@@ -639,7 +611,6 @@ public class StudentDashboard extends JFrame {
         cancelButton.addActionListener(e -> dialog.dispose());
 
         submitButton.addActionListener(e -> {
-
             String department =
                     (String) departmentBox.getSelectedItem();
 
@@ -661,27 +632,17 @@ public class StudentDashboard extends JFrame {
                 return;
             }
 
-            int requestId = 1001 + myRequests.size();
-
-            MaintenanceRequestUI request =
-                    new MaintenanceRequestUI(
-                            requestId,
-                            userEmail,
-                            userRole,
-                            location,
-                            category,
-                            description,
-                            "PENDING"
+            // Generate a request ID using the current store size.
+            String requestId = "REQ-" +
+                    String.format(
+                            "%03d",
+                            RequestStore.getTotalCount() + 1
                     );
 
-            // Keep the request in the current user's list.
-            myRequests.add(request);
-
-            // Save the request and selected department
-            // in the shared store for HOD and staff screens.
+            // Add the request to the shared store.
             RequestStore.addRequest(
                     new RequestStore.RequestItem(
-                            String.valueOf(requestId),
+                            requestId,
                             userEmail,
                             userRole,
                             location,
@@ -747,9 +708,7 @@ public class StudentDashboard extends JFrame {
         if (component instanceof JScrollPane) {
             copy.fill = GridBagConstraints.BOTH;
             copy.weighty = 1;
-            component.setPreferredSize(
-                    new Dimension(400, 105)
-            );
+            component.setPreferredSize(new Dimension(400, 105));
         }
 
         panel.add(component, copy);
@@ -778,8 +737,21 @@ public class StudentDashboard extends JFrame {
 
         int pending = 0;
         int completed = 0;
+        int total = 0;
 
-        for (MaintenanceRequestUI request : myRequests) {
+        // Always read the latest shared data.
+        for (RequestStore.RequestItem request
+                : RequestStore.getRequests()) {
+
+            // Show only requests belonging to this user.
+            if (request.email == null ||
+                    userEmail == null ||
+                    !request.email.equalsIgnoreCase(userEmail)) {
+                continue;
+            }
+
+            total++;
+
             tableModel.addRow(new Object[]{
                     request.id,
                     request.location,
@@ -788,19 +760,17 @@ public class StudentDashboard extends JFrame {
                     request.status
             });
 
-            if ("PENDING".equals(request.status)) {
+            if ("PENDING".equalsIgnoreCase(request.status)) {
                 pending++;
             }
 
-            if ("COMPLETED".equals(request.status)) {
+            if ("COMPLETED".equalsIgnoreCase(request.status)) {
                 completed++;
             }
         }
 
         if (totalValue != null) {
-            totalValue.setText(
-                    String.valueOf(myRequests.size())
-            );
+            totalValue.setText(String.valueOf(total));
             pendingValue.setText(String.valueOf(pending));
             completedValue.setText(String.valueOf(completed));
         }
@@ -852,8 +822,12 @@ public class StudentDashboard extends JFrame {
     }
 
     private String shortenEmail(String email, int maxLength) {
-        if (email == null || email.length() <= maxLength) {
-            return email == null ? "" : email;
+        if (email == null) {
+            return "";
+        }
+
+        if (email.length() <= maxLength) {
+            return email;
         }
 
         return email.substring(0, maxLength - 3) + "...";
@@ -871,37 +845,6 @@ public class StudentDashboard extends JFrame {
         if (choice == JOptionPane.YES_OPTION) {
             dispose();
             new LoginFrame();
-        }
-    }
-
-    // Temporary request model for UI testing.
-    // Shared requests are also stored in RequestStore.
-    private static class MaintenanceRequestUI {
-
-        int id;
-        String email;
-        String role;
-        String location;
-        String category;
-        String description;
-        String status;
-
-        MaintenanceRequestUI(
-                int id,
-                String email,
-                String role,
-                String location,
-                String category,
-                String description,
-                String status
-        ) {
-            this.id = id;
-            this.email = email;
-            this.role = role;
-            this.location = location;
-            this.category = category;
-            this.description = description;
-            this.status = status;
         }
     }
 }
