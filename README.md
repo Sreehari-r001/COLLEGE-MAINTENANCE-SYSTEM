@@ -157,12 +157,14 @@ The schema should use primary keys, foreign keys, appropriate constraints, and p
 
 The team has four members. Responsibilities can be adjusted together before implementation begins.
 
+## Team Responsibilities
+
 | Team role | Main responsibilities |
 |---|---|
-| Member 1 — OOP and business logic | Model classes, request statuses, validation, workflow rules, and permissions |
-| Member 2 — Java Swing GUI | Login screen, complaint form, and role-based dashboards |
-| Member 3 — MySQL and JDBC | Database schema, connection manager, DAO classes, and database operations |
-| Member 4 — Integration and testing | Connect layers, test workflows and permissions, coordinate repository work, and help with documentation |
+| Member 1 — Core System Development | Develop core classes and the object-oriented structure; implement core system functionality; apply encapsulation, inheritance, and polymorphism |
+| Member 2 — Database Management | Design database tables; implement JDBC connectivity; develop database operations for storing, retrieving, and updating maintenance requests; ensure data persistence across logins and application restarts |
+| Member 3 — User Interface Development | Develop the Java Swing login interface and role selection; create Student and Faculty dashboards, HOD review interface, and Maintenance Staff interface; implement forms, tables, buttons, and navigation |
+| Member 4 — Complaint Management and Business Logic | Implement complaint validation and business rules; manage status transitions from pending to approval, rejection, in-progress, and completion; implement complaint filtering, tracking, statistics, and reporting; integrate business logic with the database and UI; test the complete complaint management workflow |
 
 All members should agree on class names and method signatures before implementing separate modules. Everyone should understand the overall system and be able to explain their contributions.
 
