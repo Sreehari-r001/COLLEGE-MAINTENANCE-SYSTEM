@@ -1,5 +1,6 @@
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 
 public class LoginFrame extends JFrame {
@@ -8,20 +9,98 @@ public class LoginFrame extends JFrame {
     private JPasswordField passwordField;
     private JComboBox<String> roleBox;
 
+    private final Color DARK_GREEN = new Color(48, 76, 55);
+    private final Color SAGE_GREEN = new Color(91, 125, 97);
+    private final Color LIGHT_SAGE = new Color(232, 240, 232);
+    private final Color BACKGROUND = new Color(247, 249, 246);
+    private final Color TEXT_COLOR = new Color(45, 55, 46);
+    private final Color BORDER_COLOR = new Color(215, 225, 215);
+
     public LoginFrame() {
         setTitle("College Maintenance System");
-        setSize(450, 340);
+        setSize(850, 540);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setResizable(false);
 
-        JPanel panel = new JPanel(new GridLayout(5, 2, 10, 15));
-        panel.setBorder(
-            BorderFactory.createEmptyBorder(30, 30, 30, 30)
+        JPanel mainPanel = new JPanel(new GridLayout(1, 2));
+        mainPanel.setBackground(BACKGROUND);
+
+        JPanel welcomePanel = new JPanel();
+        welcomePanel.setLayout(
+            new BoxLayout(welcomePanel, BoxLayout.Y_AXIS)
+        );
+        welcomePanel.setBackground(DARK_GREEN);
+        welcomePanel.setBorder(
+            new EmptyBorder(55, 35, 45, 30)
         );
 
-        JLabel heading = new JLabel("College Maintenance System");
-        heading.setFont(new Font("Arial", Font.BOLD, 15));
+        JLabel logo = new JLabel("CAMPUSCARE");
+        logo.setFont(new Font("SansSerif", Font.BOLD, 15));
+        logo.setForeground(new Color(210, 228, 210));
+        logo.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JLabel welcomeTitle = new JLabel(
+            "<html>Welcome to<br>CampusCare</html>"
+        );
+        welcomeTitle.setFont(
+            new Font("SansSerif", Font.BOLD, 30)
+        );
+        welcomeTitle.setForeground(Color.WHITE);
+        welcomeTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JLabel welcomeText = new JLabel(
+            "<html>College Maintenance System<br><br>"
+            + "A simpler way to report, review,<br>"
+            + "and manage campus maintenance<br>requests.</html>"
+        );
+        welcomeText.setFont(
+            new Font("SansSerif", Font.PLAIN, 14)
+        );
+        welcomeText.setForeground(new Color(225, 235, 225));
+        welcomeText.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JLabel footer = new JLabel(
+            "A better campus starts here."
+        );
+        footer.setFont(
+            new Font("SansSerif", Font.ITALIC, 12)
+        );
+        footer.setForeground(new Color(210, 228, 210));
+        footer.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        welcomePanel.add(logo);
+        welcomePanel.add(Box.createVerticalStrut(65));
+        welcomePanel.add(welcomeTitle);
+        welcomePanel.add(Box.createVerticalStrut(20));
+        welcomePanel.add(welcomeText);
+        welcomePanel.add(Box.createVerticalGlue());
+        welcomePanel.add(footer);
+
+        JPanel formPanel = new JPanel();
+        formPanel.setLayout(
+            new BoxLayout(formPanel, BoxLayout.Y_AXIS)
+        );
+        formPanel.setBackground(Color.WHITE);
+        formPanel.setBorder(
+            new EmptyBorder(55, 40, 45, 40)
+        );
+
+        JLabel heading = new JLabel("Sign in");
+        heading.setFont(
+            new Font("SansSerif", Font.BOLD, 28)
+        );
+        heading.setForeground(DARK_GREEN);
+        heading.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JLabel subtitle = new JLabel(
+            "Enter your details to continue."
+        );
+        subtitle.setFont(
+            new Font("SansSerif", Font.PLAIN, 13)
+        );
+        subtitle.setForeground(Color.GRAY);
+        subtitle.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         emailField = new JTextField();
         passwordField = new JPasswordField();
@@ -34,63 +113,147 @@ public class LoginFrame extends JFrame {
         };
 
         roleBox = new JComboBox<>(roles);
+        roleBox.setFont(
+            new Font("SansSerif", Font.PLAIN, 13)
+        );
+        roleBox.setBackground(Color.WHITE);
+        roleBox.setForeground(TEXT_COLOR);
+        roleBox.setFocusable(false);
 
-        JButton loginButton = new JButton("Login");
+        styleField(emailField);
+        styleField(passwordField);
 
-        panel.add(heading);
-        panel.add(new JLabel(""));
-        panel.add(new JLabel("Email:"));
-        panel.add(emailField);
-        panel.add(new JLabel("Password:"));
-        panel.add(passwordField);
-        panel.add(new JLabel("Login as:"));
-        panel.add(roleBox);
-        panel.add(new JLabel(""));
-        panel.add(loginButton);
-
-        add(panel);
-
+        JButton loginButton = new JButton("Sign In");
+        loginButton.setFont(
+            new Font("SansSerif", Font.BOLD, 14)
+        );
+        loginButton.setForeground(Color.WHITE);
+        loginButton.setBackground(SAGE_GREEN);
+        loginButton.setFocusPainted(false);
+        loginButton.setBorderPainted(false);
+        loginButton.setCursor(
+            Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+        );
+        loginButton.setAlignmentX(Component.LEFT_ALIGNMENT);
+        loginButton.setMaximumSize(
+            new Dimension(Integer.MAX_VALUE, 44)
+        );
         loginButton.addActionListener(e -> login());
 
+        formPanel.add(heading);
+        formPanel.add(Box.createVerticalStrut(8));
+        formPanel.add(subtitle);
+        formPanel.add(Box.createVerticalStrut(30));
+
+        addField(formPanel, "Email address", emailField);
+        formPanel.add(Box.createVerticalStrut(18));
+
+        addField(formPanel, "Password", passwordField);
+        formPanel.add(Box.createVerticalStrut(18));
+
+        addField(formPanel, "Login as", roleBox);
+        formPanel.add(Box.createVerticalStrut(30));
+
+        formPanel.add(loginButton);
+        formPanel.add(Box.createVerticalGlue());
+
+        JLabel note = new JLabel(
+            "College Maintenance System"
+        );
+        note.setFont(
+            new Font("SansSerif", Font.PLAIN, 11)
+        );
+        note.setForeground(Color.GRAY);
+        note.setAlignmentX(Component.LEFT_ALIGNMENT);
+        formPanel.add(note);
+
+        mainPanel.add(welcomePanel);
+        mainPanel.add(formPanel);
+
+        add(mainPanel);
+
+        getRootPane().setDefaultButton(loginButton);
         setVisible(true);
     }
 
-    
-private void login() {
-    String email = emailField.getText().trim();
-    String password =
-        new String(passwordField.getPassword()).trim();
-
-    String role = (String) roleBox.getSelectedItem();
-
-    if (email.isEmpty() || password.isEmpty()) {
-        JOptionPane.showMessageDialog(
-            this,
-            "Please enter both email and password.",
-            "Missing Information",
-            JOptionPane.WARNING_MESSAGE
+    private void styleField(JTextField field) {
+        field.setFont(
+            new Font("SansSerif", Font.PLAIN, 14)
         );
-        return;
-    }
-
-    if (!email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
-        JOptionPane.showMessageDialog(
-            this,
-            "Please enter a valid email address.",
-            "Invalid Email",
-            JOptionPane.WARNING_MESSAGE
+        field.setForeground(TEXT_COLOR);
+        field.setBackground(BACKGROUND);
+        field.setCaretColor(SAGE_GREEN);
+        field.setBorder(
+            BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(BORDER_COLOR),
+                new EmptyBorder(10, 12, 10, 12)
+            )
         );
-        return;
+        field.setMaximumSize(
+            new Dimension(Integer.MAX_VALUE, 43)
+        );
+        field.setAlignmentX(Component.LEFT_ALIGNMENT);
     }
 
-    dispose();
+    private void addField(
+        JPanel panel,
+        String labelText,
+        JComponent field
+    ) {
+        JLabel label = new JLabel(labelText);
+        label.setFont(
+            new Font("SansSerif", Font.BOLD, 12)
+        );
+        label.setForeground(TEXT_COLOR);
+        label.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-    if ("Student".equals(role)) {
-        new StudentDashboard(email);
-    } else {
-        new RoleDashboard(role, email);
+        field.setAlignmentX(Component.LEFT_ALIGNMENT);
+        field.setMaximumSize(
+            new Dimension(Integer.MAX_VALUE, 43)
+        );
+
+        panel.add(label);
+        panel.add(Box.createVerticalStrut(7));
+        panel.add(field);
     }
-}
+
+    private void login() {
+        String email = emailField.getText().trim();
+        String password =
+            new String(passwordField.getPassword()).trim();
+
+        String role = (String) roleBox.getSelectedItem();
+
+        if (email.isEmpty() || password.isEmpty()) {
+            JOptionPane.showMessageDialog(
+                this,
+                "Please enter both email and password.",
+                "Missing Information",
+                JOptionPane.WARNING_MESSAGE
+            );
+            return;
+        }
+
+        if (!email.matches(
+            "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$"
+        )) {
+            JOptionPane.showMessageDialog(
+                this,
+                "Please enter a valid email address.",
+                "Invalid Email",
+                JOptionPane.WARNING_MESSAGE
+            );
+            return;
+        }
+
+        dispose();
+
+        if ("Student".equals(role)) {
+            new StudentDashboard(email);
+        } else {
+            new RoleDashboard(role, email);
+        }
+    }
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new LoginFrame());

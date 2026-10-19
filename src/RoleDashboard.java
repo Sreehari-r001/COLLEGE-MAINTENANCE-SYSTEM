@@ -5,130 +5,292 @@ import java.awt.*;
 
 public class RoleDashboard extends JFrame {
 
-    private String role;
-    private String email;
+    private final String role;
+    private final String email;
+
+    private final Color darkGreen = new Color(48, 82, 66);
+    private final Color sageGreen = new Color(225, 235, 224);
+    private final Color background = new Color(246, 248, 245);
+    private final Color white = Color.WHITE;
+    private final Color textColor = new Color(48, 60, 51);
+
+    private JLabel totalValue;
+    private JLabel pendingValue;
+    private JLabel approvedValue;
+    private JLabel completedValue;
+
+    private DefaultTableModel requestModel;
 
     public RoleDashboard(String role, String email) {
         this.role = role;
         this.email = email;
 
-        setTitle(role + " Dashboard - College Maintenance System");
-        setSize(750, 450);
+        setTitle("CampusCare | " + role + " Dashboard");
+        setSize(1100, 700);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
+        setLayout(new BorderLayout());
 
-        JPanel mainPanel = new JPanel(new BorderLayout(15, 15));
+        add(createSidebar(), BorderLayout.WEST);
+        add(createMainPanel(), BorderLayout.CENTER);
 
-        // Header
-        JPanel header = new JPanel(new GridLayout(2, 1));
-        header.setBorder(
-            BorderFactory.createEmptyBorder(20, 20, 10, 20)
-        );
+        refreshDashboard();
+        setVisible(true);
+    }
 
-        JLabel title = new JLabel(role + " Dashboard");
-        title.setFont(new Font("Arial", Font.BOLD, 24));
+    private JPanel createSidebar() {
+        JPanel sidebar = new JPanel();
+        sidebar.setBackground(darkGreen);
+        sidebar.setPreferredSize(new Dimension(225, 700));
+        sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
+        sidebar.setBorder(
+                BorderFactory.createEmptyBorder(25, 18, 20, 18));
 
-        JLabel welcome = new JLabel("Logged in as: " + email);
+        JLabel logo = new JLabel("CampusCare");
+        logo.setFont(new Font("SansSerif", Font.BOLD, 25));
+        logo.setForeground(white);
+        logo.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        header.add(title);
-        header.add(welcome);
+        JLabel subtitle = new JLabel("COLLEGE MAINTENANCE");
+        subtitle.setFont(new Font("SansSerif", Font.PLAIN, 10));
+        subtitle.setForeground(new Color(215, 228, 215));
+        subtitle.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        mainPanel.add(header, BorderLayout.NORTH);
+        sidebar.add(logo);
+        sidebar.add(Box.createVerticalStrut(5));
+        sidebar.add(subtitle);
+        sidebar.add(Box.createVerticalStrut(45));
 
-        // Sample request table
-        String[] columns = {
-            "Request ID",
-            "Location",
-            "Category",
-            "Status"
-        };
+        addSidebarButton(sidebar, "Dashboard", this::showDashboard);
 
-        Object[][] data = {
-            {101, "Room 101", "Electrical", "PENDING"},
-            {102, "Library", "Furniture", "IN_PROGRESS"},
-            {103, "Lab 2", "Plumbing", "COMPLETED"}
-        };
-
-        DefaultTableModel model =
-            new DefaultTableModel(data, columns) {
-                @Override
-                public boolean isCellEditable(int row, int column) {
-                    return false;
-                }
-            };
-
-        JTable table = new JTable(model);
-        table.setRowHeight(30);
-        table.getTableHeader().setReorderingAllowed(false);
-        table.setSelectionMode(
-            ListSelectionModel.SINGLE_SELECTION
-        );
-
-        mainPanel.add(
-            new JScrollPane(table),
-            BorderLayout.CENTER
-        );
-
-        // Role-specific navigation buttons
-        JPanel bottomPanel = new JPanel(new FlowLayout());
-
-        if (role.equals("Faculty")) {
-            JButton requestsButton =
-                new JButton("Submit / View My Requests");
-
-            requestsButton.addActionListener(e -> {
+        if (role.equalsIgnoreCase("Faculty")) {
+            addSidebarButton(sidebar, "My Requests", () -> {
                 dispose();
                 new StudentDashboard(email, "Faculty");
             });
-
-            bottomPanel.add(requestsButton);
-
-        } else if (role.equals("HOD")) {
-            JButton reviewButton =
-                new JButton("Review Maintenance Requests");
-
-            reviewButton.addActionListener(e -> {
+        } else if (role.equalsIgnoreCase("HOD")) {
+            addSidebarButton(sidebar, "Review Requests", () -> {
                 dispose();
                 new HodReviewFrame(email);
             });
-
-            bottomPanel.add(reviewButton);
-
-        } else if (role.equals("Maintenance Staff")) {
-            JButton workButton =
-                new JButton("View Assigned Work");
-
-            workButton.addActionListener(e -> {
+        } else if (role.equalsIgnoreCase("Maintenance Staff")) {
+            addSidebarButton(sidebar, "Assigned Work", () -> {
                 dispose();
                 new MaintenanceStaffFrame(email);
             });
-
-            bottomPanel.add(workButton);
         }
 
-        // Logout with confirmation
-        JButton logoutButton = new JButton("Logout");
+        sidebar.add(Box.createVerticalGlue());
 
-        logoutButton.addActionListener(e -> {
-            int choice = JOptionPane.showConfirmDialog(
-                this,
-                "Are you sure you want to log out?",
-                "Confirm Logout",
-                JOptionPane.YES_NO_OPTION,
-                JOptionPane.QUESTION_MESSAGE
-            );
+        JLabel account = new JLabel(
+                "<html><b>" + role + "</b><br>" + email + "</html>");
+        account.setForeground(white);
+        account.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        account.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-            if (choice == JOptionPane.YES_OPTION) {
-                dispose();
-                new LoginFrame();
-            }
+        sidebar.add(account);
+        sidebar.add(Box.createVerticalStrut(18));
+
+        addSidebarButton(sidebar, "Log Out", () -> {
+            dispose();
+            new LoginFrame();
         });
 
-        bottomPanel.add(logoutButton);
+        return sidebar;
+    }
 
-        mainPanel.add(bottomPanel, BorderLayout.SOUTH);
+    private void addSidebarButton(
+            JPanel sidebar, String text, Runnable action) {
 
-        add(mainPanel);
-        setVisible(true);
+        JButton button = new JButton(text);
+        button.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        button.setForeground(white);
+        button.setBackground(darkGreen);
+        button.setFocusPainted(false);
+        button.setBorderPainted(false);
+        button.setHorizontalAlignment(SwingConstants.LEFT);
+        button.setMaximumSize(new Dimension(200, 43));
+        button.setPreferredSize(new Dimension(190, 43));
+        button.setAlignmentX(Component.LEFT_ALIGNMENT);
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        button.setBorder(
+                BorderFactory.createEmptyBorder(10, 12, 10, 5));
+
+        button.addActionListener(e -> action.run());
+        sidebar.add(button);
+        sidebar.add(Box.createVerticalStrut(8));
+    }
+
+    private JPanel createMainPanel() {
+        JPanel main = new JPanel(new BorderLayout(0, 20));
+        main.setBackground(background);
+        main.setBorder(
+                BorderFactory.createEmptyBorder(28, 30, 25, 30));
+
+        JPanel header = new JPanel();
+        header.setBackground(background);
+        header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
+
+        JLabel heading = new JLabel("Dashboard");
+        heading.setFont(new Font("SansSerif", Font.BOLD, 29));
+        heading.setForeground(textColor);
+
+        JLabel welcome = new JLabel(
+                "Welcome back! Here's your maintenance overview.");
+        welcome.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        welcome.setForeground(new Color(105, 115, 105));
+
+        header.add(heading);
+        header.add(Box.createVerticalStrut(7));
+        header.add(welcome);
+
+        JPanel content = new JPanel();
+        content.setBackground(background);
+        content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
+
+        JPanel cards = new JPanel(new GridLayout(1, 4, 15, 0));
+        cards.setBackground(background);
+        cards.setMaximumSize(new Dimension(Integer.MAX_VALUE, 125));
+
+        totalValue = new JLabel("0");
+        pendingValue = new JLabel("0");
+        approvedValue = new JLabel("0");
+        completedValue = new JLabel("0");
+
+        cards.add(createStatCard("Total Requests", totalValue));
+        cards.add(createStatCard("Pending", pendingValue));
+        cards.add(createStatCard("Approved", approvedValue));
+        cards.add(createStatCard("Completed", completedValue));
+
+        JPanel tablePanel = createRecentRequestsPanel();
+
+        content.add(cards);
+        content.add(Box.createVerticalStrut(25));
+        content.add(tablePanel);
+
+        main.add(header, BorderLayout.NORTH);
+        main.add(content, BorderLayout.CENTER);
+
+        return main;
+    }
+
+    private JPanel createStatCard(String title, JLabel value) {
+        JPanel card = new JPanel();
+        card.setBackground(white);
+        card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
+        card.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(
+                        new Color(225, 231, 224)),
+                BorderFactory.createEmptyBorder(17, 17, 15, 10)
+        ));
+
+        JLabel titleLabel = new JLabel(title);
+        titleLabel.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        titleLabel.setForeground(new Color(100, 110, 100));
+
+        value.setFont(new Font("SansSerif", Font.BOLD, 27));
+        value.setForeground(darkGreen);
+
+        card.add(titleLabel);
+        card.add(Box.createVerticalStrut(12));
+        card.add(value);
+
+        return card;
+    }
+
+    private JPanel createRecentRequestsPanel() {
+        JPanel panel = new JPanel(new BorderLayout(0, 15));
+        panel.setBackground(white);
+        panel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(
+                        new Color(225, 231, 224)),
+                BorderFactory.createEmptyBorder(20, 20, 20, 20)
+        ));
+
+        JLabel title = new JLabel("Recent Maintenance Requests");
+        title.setFont(new Font("SansSerif", Font.BOLD, 18));
+        title.setForeground(textColor);
+
+        String[] columns = {
+                "Request ID", "Department", "Category", "Status"
+        };
+
+        requestModel = new DefaultTableModel(columns, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+
+        JTable table = new JTable(requestModel);
+        table.setRowHeight(35);
+        table.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        table.getTableHeader().setFont(
+                new Font("SansSerif", Font.BOLD, 12));
+        table.getTableHeader().setBackground(sageGreen);
+        table.getTableHeader().setForeground(darkGreen);
+        table.setBackground(white);
+        table.setForeground(textColor);
+        table.setSelectionBackground(sageGreen);
+        table.setSelectionForeground(textColor);
+        table.setAutoCreateRowSorter(true);
+
+        JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+
+        panel.add(title, BorderLayout.NORTH);
+        panel.add(scrollPane, BorderLayout.CENTER);
+
+        return panel;
+    }
+
+    // Read the latest values from the shared RequestStore.
+    private void refreshDashboard() {
+        int total = RequestStore.getTotalCount();
+        int pending = RequestStore.countStatus("PENDING");
+        int approved = RequestStore.countStatus("APPROVED");
+        int completed = RequestStore.countStatus("COMPLETED");
+
+        totalValue.setText(String.valueOf(total));
+        pendingValue.setText(String.valueOf(pending));
+        approvedValue.setText(String.valueOf(approved));
+        completedValue.setText(String.valueOf(completed));
+
+        refreshRecentRequests();
+    }
+
+    private void refreshRecentRequests() {
+        requestModel.setRowCount(0);
+
+        for (RequestStore.RequestItem request
+                : RequestStore.getRequests()) {
+
+            requestModel.addRow(new Object[]{
+                    request.id,
+                    request.department,
+                    request.category,
+                    formatStatus(request.status)
+            });
+        }
+    }
+
+    private String formatStatus(String status) {
+        if (status == null) {
+            return "Unknown";
+        }
+
+        return status.replace('_', ' ');
+    }
+
+    private void showDashboard() {
+        refreshDashboard();
+
+        JOptionPane.showMessageDialog(
+                this,
+                "Dashboard updated with the latest requests.",
+                "CampusCare",
+                JOptionPane.INFORMATION_MESSAGE
+        );
     }
 }
+  
