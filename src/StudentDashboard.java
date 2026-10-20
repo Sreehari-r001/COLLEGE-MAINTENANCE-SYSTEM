@@ -302,22 +302,34 @@ public class StudentDashboard extends JFrame {
         card.setBackground(WHITE);
         card.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(BORDER_COLOR),
-                new EmptyBorder(14, 16, 12, 12)
+                new EmptyBorder(15, 17, 13, 17)
         ));
+
+        JPanel heading = new JPanel(new BorderLayout());
+        heading.setOpaque(false);
 
         JLabel titleLabel = new JLabel(title);
         titleLabel.setFont(new Font("SansSerif", Font.PLAIN, 12));
         titleLabel.setForeground(MUTED_TEXT);
 
-        valueLabel.setFont(new Font("SansSerif", Font.BOLD, 26));
-        valueLabel.setForeground(accent);
+        JPanel accentBar = new JPanel();
+        accentBar.setBackground(accent);
+        accentBar.setPreferredSize(new Dimension(4, 18));
+
+        heading.add(titleLabel, BorderLayout.CENTER);
+        heading.add(accentBar, BorderLayout.WEST);
+
+        valueLabel.setFont(new Font("SansSerif", Font.BOLD, 29));
+        valueLabel.setForeground(DARK_GREEN);
 
         JLabel descriptionLabel = new JLabel(description);
-        descriptionLabel.setFont(new Font("SansSerif", Font.PLAIN, 10));
+        descriptionLabel.setFont(
+                new Font("SansSerif", Font.PLAIN, 10)
+        );
         descriptionLabel.setForeground(MUTED_TEXT);
 
-        card.add(titleLabel);
-        card.add(Box.createVerticalStrut(7));
+        card.add(heading);
+        card.add(Box.createVerticalStrut(8));
         card.add(valueLabel);
         card.add(Box.createVerticalStrut(4));
         card.add(descriptionLabel);
@@ -325,7 +337,7 @@ public class StudentDashboard extends JFrame {
         return card;
     }
 
-    // ---------------- REQUESTS PAGE ----------------
+    // ---------------- REQUESTS PANEL ----------------
 
     private JPanel createRequestsPanel() {
         JPanel panel = new JPanel(new BorderLayout(0, 20));
@@ -341,12 +353,12 @@ public class StudentDashboard extends JFrame {
         ));
         titlePanel.setOpaque(false);
 
-        JLabel title = new JLabel("My Requests");
-        title.setFont(new Font("SansSerif", Font.BOLD, 27));
+        JLabel title = new JLabel("My Maintenance Requests");
+        title.setFont(new Font("SansSerif", Font.BOLD, 25));
         title.setForeground(DARK_GREEN);
 
         JLabel subtitle = new JLabel(
-                "Track the maintenance requests you have submitted."
+                "Track the status of your submitted requests."
         );
         subtitle.setFont(new Font("SansSerif", Font.PLAIN, 13));
         subtitle.setForeground(MUTED_TEXT);
@@ -363,19 +375,10 @@ public class StudentDashboard extends JFrame {
         header.add(titlePanel, BorderLayout.CENTER);
         header.add(newRequestButton, BorderLayout.EAST);
 
-        JLabel tableNote = new JLabel(
-                "Your requests and their latest statuses are shown below."
-        );
-        tableNote.setFont(new Font("SansSerif", Font.PLAIN, 12));
-        tableNote.setForeground(MUTED_TEXT);
-
-        JPanel notePanel = new JPanel(new BorderLayout());
-        notePanel.setOpaque(false);
-        notePanel.add(tableNote, BorderLayout.NORTH);
+        JScrollPane scrollPane = createTableScrollPane();
 
         panel.add(header, BorderLayout.NORTH);
-        panel.add(createTableScrollPane(), BorderLayout.CENTER);
-        panel.add(notePanel, BorderLayout.SOUTH);
+        panel.add(scrollPane, BorderLayout.CENTER);
 
         return panel;
     }
@@ -397,96 +400,51 @@ public class StudentDashboard extends JFrame {
         };
 
         requestTable = new JTable(tableModel);
-        requestTable.setFont(
-                new Font("SansSerif", Font.PLAIN, 12)
-        );
+        requestTable.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        requestTable.setRowHeight(38);
         requestTable.setForeground(TEXT_COLOR);
         requestTable.setBackground(WHITE);
-        requestTable.setRowHeight(38);
-        requestTable.setShowVerticalLines(false);
         requestTable.setGridColor(BORDER_COLOR);
+        requestTable.setShowVerticalLines(false);
         requestTable.setSelectionBackground(LIGHT_SAGE);
         requestTable.setSelectionForeground(DARK_GREEN);
         requestTable.setFillsViewportHeight(true);
         requestTable.setAutoCreateRowSorter(true);
-        requestTable.setSelectionMode(
-                ListSelectionModel.SINGLE_SELECTION
-        );
 
         requestTable.getTableHeader().setFont(
                 new Font("SansSerif", Font.BOLD, 12)
         );
-        requestTable.getTableHeader().setBackground(LIGHT_SAGE);
         requestTable.getTableHeader().setForeground(DARK_GREEN);
+        requestTable.getTableHeader().setBackground(LIGHT_SAGE);
         requestTable.getTableHeader().setPreferredSize(
                 new Dimension(0, 40)
         );
         requestTable.getTableHeader().setReorderingAllowed(false);
 
+        DefaultTableCellRenderer centerRenderer =
+                new DefaultTableCellRenderer();
+        centerRenderer.setHorizontalAlignment(
+                SwingConstants.CENTER
+        );
+
+        requestTable.getColumnModel()
+                .getColumn(0)
+                .setCellRenderer(centerRenderer);
+
+        requestTable.getColumnModel()
+                .getColumn(4)
+                .setCellRenderer(new StatusRenderer());
+
         requestTable.getColumnModel().getColumn(0)
-                .setPreferredWidth(90);
+                .setPreferredWidth(100);
         requestTable.getColumnModel().getColumn(1)
-                .setPreferredWidth(115);
+                .setPreferredWidth(130);
         requestTable.getColumnModel().getColumn(2)
-                .setPreferredWidth(105);
+                .setPreferredWidth(110);
         requestTable.getColumnModel().getColumn(3)
-                .setPreferredWidth(230);
+                .setPreferredWidth(250);
         requestTable.getColumnModel().getColumn(4)
-                .setPreferredWidth(115);
-
-        DefaultTableCellRenderer statusRenderer =
-                new DefaultTableCellRenderer() {
-                    @Override
-                    public Component getTableCellRendererComponent(
-                            JTable table,
-                            Object value,
-                            boolean isSelected,
-                            boolean hasFocus,
-                            int row,
-                            int column
-                    ) {
-                        Component component =
-                                super.getTableCellRendererComponent(
-                                        table,
-                                        value,
-                                        isSelected,
-                                        hasFocus,
-                                        row,
-                                        column
-                                );
-
-                        setHorizontalAlignment(SwingConstants.CENTER);
-
-                        if (!isSelected) {
-                            String status = value == null
-                                    ? ""
-                                    : value.toString();
-
-                            if ("COMPLETED".equalsIgnoreCase(status)) {
-                                component.setForeground(
-                                        new Color(49, 120, 76)
-                                );
-                            } else if (
-                                    "PENDING".equalsIgnoreCase(status)) {
-                                component.setForeground(
-                                        new Color(165, 119, 38)
-                                );
-                            } else if (
-                                    "REJECTED".equalsIgnoreCase(status)) {
-                                component.setForeground(
-                                        new Color(180, 65, 65)
-                                );
-                            } else {
-                                component.setForeground(SAGE_GREEN);
-                            }
-                        }
-
-                        return component;
-                    }
-                };
-
-        requestTable.getColumnModel().getColumn(4)
-                .setCellRenderer(statusRenderer);
+                .setPreferredWidth(110);
 
         JScrollPane scrollPane = new JScrollPane(requestTable);
         scrollPane.setBorder(
@@ -497,6 +455,72 @@ public class StudentDashboard extends JFrame {
         return scrollPane;
     }
 
+    // ---------------- STATUS RENDERER ----------------
+
+    private class StatusRenderer extends DefaultTableCellRenderer {
+
+        @Override
+        public Component getTableCellRendererComponent(
+                JTable table,
+                Object value,
+                boolean isSelected,
+                boolean hasFocus,
+                int row,
+                int column
+        ) {
+            Component component =
+                    super.getTableCellRendererComponent(
+                            table, value, isSelected,
+                            hasFocus, row, column
+                    );
+
+            setHorizontalAlignment(SwingConstants.CENTER);
+            setFont(new Font("SansSerif", Font.BOLD, 11));
+
+            if (!isSelected) {
+                String status = value == null
+                        ? ""
+                        : value.toString().toUpperCase();
+
+                switch (status) {
+                    case "PENDING":
+                    case "SUBMITTED":
+                        setForeground(new Color(157, 112, 33));
+                        setBackground(new Color(255, 247, 225));
+                        break;
+
+                    case "APPROVED":
+                    case "ASSIGNED":
+                        setForeground(new Color(48, 105, 72));
+                        setBackground(new Color(230, 244, 233));
+                        break;
+
+                    case "IN_PROGRESS":
+                        setForeground(new Color(47, 99, 155));
+                        setBackground(new Color(229, 240, 253));
+                        break;
+
+                    case "COMPLETED":
+                        setForeground(new Color(43, 117, 75));
+                        setBackground(new Color(220, 243, 226));
+                        break;
+
+                    case "REJECTED":
+                        setForeground(new Color(165, 54, 54));
+                        setBackground(new Color(255, 232, 232));
+                        break;
+
+                    default:
+                        setForeground(TEXT_COLOR);
+                        setBackground(WHITE);
+                        break;
+                }
+            }
+
+            return component;
+        }
+    }
+
     // ---------------- SUBMIT REQUEST ----------------
 
     private void submitRequest() {
@@ -504,16 +528,18 @@ public class StudentDashboard extends JFrame {
                 this, "Submit Maintenance Request", true
         );
 
-        dialog.setSize(500, 590);
-        dialog.setResizable(false);
+        dialog.setSize(540, 620);
+        dialog.setMinimumSize(new Dimension(500, 570));
         dialog.setLocationRelativeTo(this);
+        dialog.setResizable(false);
 
         JPanel form = new JPanel(new GridBagLayout());
         form.setBackground(WHITE);
-        form.setBorder(new EmptyBorder(24, 28, 24, 28));
+        form.setBorder(new EmptyBorder(24, 30, 24, 30));
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
+        gbc.gridwidth = 2;
         gbc.weightx = 1;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.WEST;
@@ -524,43 +550,45 @@ public class StudentDashboard extends JFrame {
         heading.setForeground(DARK_GREEN);
 
         JLabel subtitle = new JLabel(
-                "Provide the details of the problem on campus."
+                "Please provide the details of the issue."
         );
         subtitle.setFont(new Font("SansSerif", Font.PLAIN, 12));
         subtitle.setForeground(MUTED_TEXT);
 
+        JComboBox<String> departmentBox = new JComboBox<>(
+                new String[]{
+                        "CSE",
+                        "ECE",
+                        "EEE",
+                        "Civil",
+                        "Mechanical",
+                        "IT",
+                        "Other"
+                }
+        );
+
         JTextField locationField = new JTextField();
+        locationField.setToolTipText(
+                "Example: Room 101 or Library"
+        );
         styleInput(locationField);
 
-        String[] departments = {
-                "CSE", "EC", "EEE", "ME", "CE", "Other"
-        };
-
-        JComboBox<String> departmentBox =
-                new JComboBox<>(departments);
-
-        departmentBox.setFont(
-                new Font("SansSerif", Font.PLAIN, 13)
+        JComboBox<String> categoryBox = new JComboBox<>(
+                new String[]{
+                        "Electrical",
+                        "Plumbing",
+                        "Furniture",
+                        "Cleaning",
+                        "Other"
+                }
         );
-        departmentBox.setBackground(WHITE);
-        departmentBox.setForeground(TEXT_COLOR);
-
-        String[] categories = {
-                "Electrical",
-                "Plumbing",
-                "Furniture",
-                "Cleaning",
-                "Other"
-        };
-
-        JComboBox<String> categoryBox =
-                new JComboBox<>(categories);
 
         categoryBox.setFont(
                 new Font("SansSerif", Font.PLAIN, 13)
         );
-        categoryBox.setBackground(WHITE);
+        categoryBox.setBackground(BACKGROUND);
         categoryBox.setForeground(TEXT_COLOR);
+        categoryBox.setPreferredSize(new Dimension(400, 39));
 
         JTextArea descriptionArea = new JTextArea(5, 25);
         descriptionArea.setFont(
@@ -570,13 +598,10 @@ public class StudentDashboard extends JFrame {
         descriptionArea.setWrapStyleWord(true);
         descriptionArea.setForeground(TEXT_COLOR);
         descriptionArea.setBackground(BACKGROUND);
-        descriptionArea.setBorder(
-                new EmptyBorder(9, 10, 9, 10)
-        );
+        descriptionArea.setBorder(new EmptyBorder(8, 9, 8, 9));
 
         JScrollPane descriptionScroll =
                 new JScrollPane(descriptionArea);
-
         descriptionScroll.setBorder(
                 BorderFactory.createLineBorder(BORDER_COLOR)
         );
@@ -632,26 +657,51 @@ public class StudentDashboard extends JFrame {
                 return;
             }
 
-            // Generate a request ID using the current store size.
-            String requestId = "REQ-" +
-                    String.format(
-                            "%03d",
-                            RequestStore.getTotalCount() + 1
-                    );
+            // Save the request to MySQL instead of temporary memory.
+            MaintenanceRequestDAO dao = new MaintenanceRequestDAO();
 
-            // Add the request to the shared store.
-            RequestStore.addRequest(
-                    new RequestStore.RequestItem(
-                            requestId,
-                            userEmail,
-                            userRole,
-                            location,
-                            department,
-                            category,
-                            description,
-                            "PENDING"
-                    )
+            // Find the logged-in user's numeric ID in the users table.
+            int userId = dao.getUserIdByEmail(userEmail);
+
+            if (userId == -1) {
+                JOptionPane.showMessageDialog(
+                        dialog,
+                        "Your email was not found in the database."
+                                + "\nPlease use an email listed in the MySQL users table.",
+                        "User Not Found",
+                        JOptionPane.ERROR_MESSAGE
+                );
+                return;
+            }
+
+            // The database enum does not include CLEANING, so store it as OTHER.
+            String databaseCategory = category.toUpperCase();
+            if ("CLEANING".equals(databaseCategory)) {
+                databaseCategory = "OTHER";
+            }
+
+            RequestRecord request = new RequestRecord(
+                    userId,
+                    department,
+                    location,
+                    databaseCategory,
+                    description
             );
+
+            int databaseRequestId = dao.insertRequest(request);
+
+            if (databaseRequestId == -1) {
+                JOptionPane.showMessageDialog(
+                        dialog,
+                        "Could not save your request to MySQL."
+                                + "\nPlease check the database connection and try again.",
+                        "Database Error",
+                        JOptionPane.ERROR_MESSAGE
+                );
+                return;
+            }
+
+            String requestId = "REQ-" + String.format("%03d", databaseRequestId);
 
             refreshDashboard();
 
@@ -739,32 +789,45 @@ public class StudentDashboard extends JFrame {
         int completed = 0;
         int total = 0;
 
-        // Always read the latest shared data.
-        for (RequestStore.RequestItem request
-                : RequestStore.getRequests()) {
+        MaintenanceRequestDAO dao = new MaintenanceRequestDAO();
+        int userId = dao.getUserIdByEmail(userEmail);
 
-            // Show only requests belonging to this user.
-            if (request.email == null ||
-                    userEmail == null ||
-                    !request.email.equalsIgnoreCase(userEmail)) {
-                continue;
+        if (userId == -1) {
+            // Do not show another user's requests if the email is not found.
+            if (totalValue != null) {
+                totalValue.setText("0");
+                pendingValue.setText("0");
+                completedValue.setText("0");
             }
+            return;
+        }
 
+        // Load this user's requests from MySQL.
+        for (RequestRecord request : dao.getRequestsBySubmitter(userId)) {
             total++;
 
+            String status = request.getStatus();
+
+            // The UI calls newly submitted requests PENDING; MySQL stores SUBMITTED.
+            if ("SUBMITTED".equalsIgnoreCase(status)) {
+                status = "PENDING";
+            }
+
+            String requestId = "REQ-" + String.format("%03d", request.getRequestId());
+
             tableModel.addRow(new Object[]{
-                    request.id,
-                    request.location,
-                    request.category,
-                    request.description,
-                    request.status
+                    requestId,
+                    request.getRoom(),
+                    request.getCategory(),
+                    request.getDescription(),
+                    status
             });
 
-            if ("PENDING".equalsIgnoreCase(request.status)) {
+            if ("PENDING".equalsIgnoreCase(status)) {
                 pending++;
             }
 
-            if ("COMPLETED".equalsIgnoreCase(request.status)) {
+            if ("COMPLETED".equalsIgnoreCase(status)) {
                 completed++;
             }
         }

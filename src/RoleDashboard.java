@@ -2,6 +2,10 @@
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 public class RoleDashboard extends JFrame {
 
@@ -244,39 +248,84 @@ public class RoleDashboard extends JFrame {
         return panel;
     }
 
-    // Read the latest values from the shared RequestStore.
+    // Load request counts from the database.
     private void refreshDashboard() {
-        int total = RequestStore.getTotalCount();
-        int pending = RequestStore.countStatus("PENDING");
-        int approved = RequestStore.countStatus("APPROVED");
-        int completed = RequestStore.countStatus("COMPLETED");
+        String sql =
+                "SELECT " +
+                "COUNT(*) AS total, " +
+                "SUM(CASE WHEN status = 'SUBMITTED' THEN 1 ELSE 0 END) AS pending, " +
+                "SUM(CASE WHEN status = 'APPROVED' THEN 1 ELSE 0 END) AS approved, " +
+                "SUM(CASE WHEN status = 'COMPLETED' THEN 1 ELSE 0 END) AS completed " +
+                "FROM maintenance_requests";
 
-        totalValue.setText(String.valueOf(total));
-        pendingValue.setText(String.valueOf(pending));
-        approvedValue.setText(String.valueOf(approved));
-        completedValue.setText(String.valueOf(completed));
+        try {
+            Connection connection =
+                    DatabaseConnection.getInstance().getConnection();
 
-        refreshRecentRequests();
+            try (PreparedStatement statement =
+                         connection.prepareStatement(sql);
+                 ResultSet result = statement.executeQuery()) {
+
+                if (result.next()) {
+                    totalValue.setText(
+                            String.valueOf(result.getInt("total")));
+                    pendingValue.setText(
+                            String.valueOf(result.getInt("pending")));
+                    approvedValue.setText(
+                            String.valueOf(result.getInt("approved")));
+                    completedValue.setText(
+                            String.valueOf(result.getInt("completed")));
+                }
+            }
+
+            refreshRecentRequests();
+
+        } catch (SQLException ex) {
+            showDatabaseError("Could not load dashboard statistics.", ex);
+        }
     }
 
+    // Load the latest requests rather than the sample RequestStore data.
     private void refreshRecentRequests() {
         requestModel.setRowCount(0);
 
-        for (RequestStore.RequestItem request
-                : RequestStore.getRequests()) {
+        String sql =
+                "SELECT request_id, department, category, status " +
+                "FROM maintenance_requests " +
+                "ORDER BY request_id DESC LIMIT 10";
 
-            requestModel.addRow(new Object[]{
-                    request.id,
-                    request.department,
-                    request.category,
-                    formatStatus(request.status)
-            });
+        try {
+            Connection connection =
+                    DatabaseConnection.getInstance().getConnection();
+
+            try (PreparedStatement statement =
+                         connection.prepareStatement(sql);
+                 ResultSet result = statement.executeQuery()) {
+
+                while (result.next()) {
+                    String status = result.getString("status");
+
+                    requestModel.addRow(new Object[]{
+                            result.getInt("request_id"),
+                            result.getString("department"),
+                            result.getString("category"),
+                            formatStatus(status)
+                    });
+                }
+            }
+
+        } catch (SQLException ex) {
+            showDatabaseError("Could not load recent requests.", ex);
         }
     }
 
     private String formatStatus(String status) {
         if (status == null) {
             return "Unknown";
+        }
+
+        if (status.equalsIgnoreCase("SUBMITTED")) {
+            return "PENDING";
         }
 
         return status.replace('_', ' ');
@@ -287,10 +336,21 @@ public class RoleDashboard extends JFrame {
 
         JOptionPane.showMessageDialog(
                 this,
-                "Dashboard updated with the latest requests.",
+                "Dashboard refreshed from the database.",
                 "CampusCare",
                 JOptionPane.INFORMATION_MESSAGE
         );
     }
+
+    private void showDatabaseError(String message, SQLException ex) {
+        ex.printStackTrace();
+
+        JOptionPane.showMessageDialog(
+                this,
+                message + "\nCheck your database connection.\n\n"
+                        + ex.getMessage(),
+                "Database Error",
+                JOptionPane.ERROR_MESSAGE
+        );
+    }
 }
-  

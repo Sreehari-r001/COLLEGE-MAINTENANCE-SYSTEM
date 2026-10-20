@@ -487,4 +487,27 @@ public class MaintenanceRequestDAO {
 		}
 		return list;
 	}
+	        // Finds a user's database ID using their email address
+        public int getUserIdByEmail(String email) {
+                String sql = "SELECT user_id FROM users WHERE email = ?";
+
+                try (Connection con = DatabaseConnection.getInstance().getConnection();
+                     PreparedStatement ps = con.prepareStatement(sql)) {
+
+                        ps.setString(1, email);
+
+                        try (ResultSet rs = ps.executeQuery()) {
+                                if (rs.next()) {
+                                        return rs.getInt("user_id");
+                                }
+                        }
+
+                } catch (SQLException e) {
+                        System.out.println(
+                                "Could not find user by email: " + e.getMessage()
+                        );
+                }
+
+                return -1;
+        }
 }

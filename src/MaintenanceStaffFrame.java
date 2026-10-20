@@ -3,6 +3,10 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 public class MaintenanceStaffFrame extends JFrame {
 
@@ -19,6 +23,8 @@ public class MaintenanceStaffFrame extends JFrame {
     private final JLabel activeLabel;
     private final JLabel completedLabel;
 
+    private int staffId = -1;
+
     public MaintenanceStaffFrame(String email) {
         this.email = email;
 
@@ -28,13 +34,15 @@ public class MaintenanceStaffFrame extends JFrame {
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
+        staffId = getStaffId();
+
         add(createSidebar(), BorderLayout.WEST);
 
         JPanel main = new JPanel(new BorderLayout(20, 20));
         main.setBackground(BACKGROUND);
-        main.setBorder(BorderFactory.createEmptyBorder(25, 25, 25, 25));
+        main.setBorder(
+                BorderFactory.createEmptyBorder(25, 25, 25, 25));
 
-        // Header
         JPanel header = new JPanel(new BorderLayout());
         header.setBackground(BACKGROUND);
 
@@ -48,7 +56,7 @@ public class MaintenanceStaffFrame extends JFrame {
         heading.setForeground(TEXT);
 
         JLabel subtitle = new JLabel(
-                "View and manage approved maintenance requests");
+                "View and manage maintenance requests assigned to you");
         subtitle.setFont(new Font("SansSerif", Font.PLAIN, 13));
         subtitle.setForeground(new Color(105, 115, 105));
 
@@ -63,7 +71,6 @@ public class MaintenanceStaffFrame extends JFrame {
         header.add(headingPanel, BorderLayout.WEST);
         header.add(profile, BorderLayout.EAST);
 
-        // Summary cards
         JPanel summaryPanel = new JPanel(
                 new GridLayout(1, 3, 15, 0));
         summaryPanel.setBackground(BACKGROUND);
@@ -73,19 +80,18 @@ public class MaintenanceStaffFrame extends JFrame {
         completedLabel = new JLabel("0");
 
         summaryPanel.add(createSummaryCard(
-                "Available Work", totalLabel));
+                "Assigned / Available", totalLabel));
         summaryPanel.add(createSummaryCard(
                 "In Progress", activeLabel));
         summaryPanel.add(createSummaryCard(
                 "Completed", completedLabel));
 
-        // Requests table
         String[] columns = {
-            "Request ID",
-            "Department",
-            "Category",
-            "Description",
-            "Status"
+                "Request ID",
+                "Department",
+                "Category",
+                "Description",
+                "Status"
         };
 
         model = new DefaultTableModel(columns, 0) {
@@ -127,7 +133,6 @@ public class MaintenanceStaffFrame extends JFrame {
                 new Color(225, 231, 224)));
         scrollPane.getViewport().setBackground(WHITE);
 
-        // Action buttons
         JPanel buttonPanel = new JPanel(
                 new FlowLayout(FlowLayout.RIGHT, 10, 5));
         buttonPanel.setBackground(BACKGROUND);
@@ -149,7 +154,6 @@ public class MaintenanceStaffFrame extends JFrame {
         buttonPanel.add(detailsButton);
         buttonPanel.add(updateButton);
 
-        // Main content
         JPanel centerPanel = new JPanel(
                 new BorderLayout(15, 18));
         centerPanel.setBackground(BACKGROUND);
@@ -162,8 +166,46 @@ public class MaintenanceStaffFrame extends JFrame {
 
         add(main, BorderLayout.CENTER);
 
-        refreshWorkTable();
+        if (staffId != -1) {
+            refreshWorkTable();
+        } else {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Could not find a maintenance staff account for:\n"
+                            + email,
+                    "Staff Account Not Found",
+                    JOptionPane.ERROR_MESSAGE);
+        }
+
         setVisible(true);
+    }
+
+    private int getStaffId() {
+        String sql =
+                "SELECT user_id FROM users "
+                + "WHERE email = ? AND role = 'MAINTENANCE_STAFF'";
+
+        try {
+            Connection connection =
+                    DatabaseConnection.getInstance().getConnection();
+
+            try (PreparedStatement statement =
+                         connection.prepareStatement(sql)) {
+
+                statement.setString(1, email);
+
+                try (ResultSet result = statement.executeQuery()) {
+                    if (result.next()) {
+                        return result.getInt("user_id");
+                    }
+                }
+            }
+        } catch (SQLException ex) {
+            showDatabaseError(
+                    "Could not identify the maintenance staff account.", ex);
+        }
+
+        return -1;
     }
 
     private JPanel createSidebar() {
@@ -260,7 +302,6 @@ public class MaintenanceStaffFrame extends JFrame {
 
     private JButton createButton(String text, Color color) {
         JButton button = new JButton(text);
-
         button.setFont(new Font("SansSerif", Font.BOLD, 12));
         button.setForeground(WHITE);
         button.setBackground(color);
@@ -269,48 +310,93 @@ public class MaintenanceStaffFrame extends JFrame {
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
         button.setBorder(
                 BorderFactory.createEmptyBorder(10, 15, 10, 15));
-
         return button;
     }
 
-    // Show all requests approved by the HOD, in progress, or completed.
+    // Load only work assigned to the logged-in staff member.
     private void refreshWorkTable() {
-        model.setRowCount(0);
-
-        for (RequestStore.RequestItem request
-                : RequestStore.getRequests()) {
-
-            if (request.status == null) {
-                continue;
-            }
-
-            String status = request.status.trim().toUpperCase();
-
-            if (status.equals("APPROVED")
-                    || status.equals("IN_PROGRESS")
-                    || status.equals("COMPLETED")) {
-
-                model.addRow(new Object[]{
-                    request.id,
-                    request.department,
-                    request.category,
-                    request.description,
-                    status
-                });
-            }
+        if (staffId == -1) {
+            return;
         }
 
-        updateSummaryCards();
+        model.setRowCount(0);
+
+        String sql =
+                "SELECT request_id, department, category, "
+                + "description, status "
+                + "FROM maintenance_requests "
+                + "WHERE assigned_to = ? "
+                + "ORDER BY request_id DESC";
+
+        try {
+            Connection connection =
+                    DatabaseConnection.getInstance().getConnection();
+
+            try (PreparedStatement statement =
+                         connection.prepareStatement(sql)) {
+
+                statement.setInt(1, staffId);
+
+                try (ResultSet result = statement.executeQuery()) {
+                    while (result.next()) {
+                        model.addRow(new Object[]{
+                                result.getInt("request_id"),
+                                result.getString("department"),
+                                result.getString("category"),
+                                result.getString("description"),
+                                formatStatus(result.getString("status"))
+                        });
+                    }
+                }
+            }
+
+            updateSummaryCards();
+
+        } catch (SQLException ex) {
+            showDatabaseError("Could not load assigned work.", ex);
+        }
     }
 
     private void updateSummaryCards() {
-        int available = RequestStore.countStatus("APPROVED");
-        int inProgress = RequestStore.countStatus("IN_PROGRESS");
-        int completed = RequestStore.countStatus("COMPLETED");
+        if (staffId == -1) {
+            return;
+        }
 
-        totalLabel.setText(String.valueOf(available));
-        activeLabel.setText(String.valueOf(inProgress));
-        completedLabel.setText(String.valueOf(completed));
+        String sql =
+                "SELECT "
+                + "SUM(CASE WHEN status = 'ASSIGNED' "
+                + "THEN 1 ELSE 0 END) AS available, "
+                + "SUM(CASE WHEN status = 'IN_PROGRESS' "
+                + "THEN 1 ELSE 0 END) AS in_progress, "
+                + "SUM(CASE WHEN status = 'COMPLETED' "
+                + "THEN 1 ELSE 0 END) AS completed "
+                + "FROM maintenance_requests "
+                + "WHERE assigned_to = ?";
+
+        try {
+            Connection connection =
+                    DatabaseConnection.getInstance().getConnection();
+
+            try (PreparedStatement statement =
+                         connection.prepareStatement(sql)) {
+
+                statement.setInt(1, staffId);
+
+                try (ResultSet result = statement.executeQuery()) {
+                    if (result.next()) {
+                        totalLabel.setText(
+                                String.valueOf(result.getInt("available")));
+                        activeLabel.setText(
+                                String.valueOf(result.getInt("in_progress")));
+                        completedLabel.setText(
+                                String.valueOf(result.getInt("completed")));
+                    }
+                }
+            }
+
+        } catch (SQLException ex) {
+            showDatabaseError("Could not load work statistics.", ex);
+        }
     }
 
     private void viewDetails() {
@@ -325,20 +411,14 @@ public class MaintenanceStaffFrame extends JFrame {
             return;
         }
 
-        int modelRow = table.convertRowIndexToModel(selectedRow);
-
-        String id = model.getValueAt(modelRow, 0).toString();
-        String department = model.getValueAt(modelRow, 1).toString();
-        String category = model.getValueAt(modelRow, 2).toString();
-        String description = model.getValueAt(modelRow, 3).toString();
-        String status = model.getValueAt(modelRow, 4).toString();
+        int row = table.convertRowIndexToModel(selectedRow);
 
         String details =
-                "Request ID: " + id
-                + "\nDepartment: " + department
-                + "\nCategory: " + category
-                + "\nDescription: " + description
-                + "\nStatus: " + status;
+                "Request ID: " + model.getValueAt(row, 0)
+                + "\nDepartment: " + model.getValueAt(row, 1)
+                + "\nCategory: " + model.getValueAt(row, 2)
+                + "\nDescription: " + model.getValueAt(row, 3)
+                + "\nStatus: " + model.getValueAt(row, 4);
 
         JOptionPane.showMessageDialog(
                 this,
@@ -347,6 +427,7 @@ public class MaintenanceStaffFrame extends JFrame {
                 JOptionPane.INFORMATION_MESSAGE);
     }
 
+    // Update the request and record its status change in request_history.
     private void updateStatus() {
         int selectedRow = table.getSelectedRow();
 
@@ -359,38 +440,34 @@ public class MaintenanceStaffFrame extends JFrame {
             return;
         }
 
-        int modelRow = table.convertRowIndexToModel(selectedRow);
-        String requestId = model.getValueAt(modelRow, 0).toString();
+        int row = table.convertRowIndexToModel(selectedRow);
+        int requestId =
+                Integer.parseInt(model.getValueAt(row, 0).toString());
 
-        RequestStore.RequestItem request =
-                RequestStore.findById(requestId);
-
-        if (request == null) {
-            JOptionPane.showMessageDialog(
-                    this, "Request not found.");
-            refreshWorkTable();
-            return;
-        }
+        String currentStatus =
+                model.getValueAt(row, 4).toString()
+                        .toUpperCase().replace(' ', '_');
 
         String nextStatus;
 
-        if ("APPROVED".equalsIgnoreCase(request.status)) {
+        if (currentStatus.equals("ASSIGNED")) {
             nextStatus = "IN_PROGRESS";
-        } else if ("IN_PROGRESS".equalsIgnoreCase(request.status)) {
+        } else if (currentStatus.equals("IN_PROGRESS")) {
             nextStatus = "COMPLETED";
         } else {
             JOptionPane.showMessageDialog(
                     this,
-                    "This request is already completed.",
-                    "No Further Update",
+                    "Only assigned work or work in progress "
+                            + "can be updated.",
+                    "Status Cannot Be Updated",
                     JOptionPane.INFORMATION_MESSAGE);
             return;
         }
 
         int confirm = JOptionPane.showConfirmDialog(
                 this,
-                "Change request " + request.id
-                        + " to " + nextStatus + "?",
+                "Change request " + requestId
+                        + " to " + nextStatus.replace('_', ' ') + "?",
                 "Confirm Status Update",
                 JOptionPane.YES_NO_OPTION);
 
@@ -398,14 +475,110 @@ public class MaintenanceStaffFrame extends JFrame {
             return;
         }
 
-        request.status = nextStatus;
+        Connection connection = null;
 
-        refreshWorkTable();
+        try {
+            connection =
+                    DatabaseConnection.getInstance().getConnection();
+
+            boolean originalAutoCommit = connection.getAutoCommit();
+            connection.setAutoCommit(false);
+
+            try {
+                String updateSql =
+                        "UPDATE maintenance_requests "
+                        + "SET status = ? "
+                        + "WHERE request_id = ? "
+                        + "AND assigned_to = ? AND status = ?";
+
+                int updated;
+
+                try (PreparedStatement statement =
+                             connection.prepareStatement(updateSql)) {
+
+                    statement.setString(1, nextStatus);
+                    statement.setInt(2, requestId);
+                    statement.setInt(3, staffId);
+                    statement.setString(4, currentStatus);
+
+                    updated = statement.executeUpdate();
+                }
+
+                if (updated == 0) {
+                    connection.rollback();
+                    connection.setAutoCommit(originalAutoCommit);
+
+                    JOptionPane.showMessageDialog(
+                            this,
+                            "The request is no longer assigned to you "
+                                    + "or its status has changed. Refresh "
+                                    + "the table and try again.",
+                            "Request Not Updated",
+                            JOptionPane.WARNING_MESSAGE);
+
+                    refreshWorkTable();
+                    return;
+                }
+
+                String historySql =
+                        "INSERT INTO request_history "
+                        + "(request_id, old_status, new_status, "
+                        + "changed_by, remarks) "
+                        + "VALUES (?, ?, ?, ?, ?)";
+
+                try (PreparedStatement statement =
+                             connection.prepareStatement(historySql)) {
+
+                    statement.setInt(1, requestId);
+                    statement.setString(2, currentStatus);
+                    statement.setString(3, nextStatus);
+                    statement.setInt(4, staffId);
+                    statement.setString(
+                            5, "Status updated by maintenance staff");
+
+                    statement.executeUpdate();
+                }
+
+                connection.commit();
+                connection.setAutoCommit(originalAutoCommit);
+
+            } catch (SQLException ex) {
+                connection.rollback();
+                connection.setAutoCommit(originalAutoCommit);
+                throw ex;
+            }
+
+            refreshWorkTable();
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Request " + requestId
+                            + " updated to "
+                            + nextStatus.replace('_', ' ') + ".");
+
+        } catch (SQLException ex) {
+            showDatabaseError(
+                    "Could not update the request status.", ex);
+        }
+    }
+
+    private String formatStatus(String status) {
+        if (status == null) {
+            return "UNKNOWN";
+        }
+
+        return status.replace('_', ' ');
+    }
+
+    private void showDatabaseError(String message, SQLException ex) {
+        ex.printStackTrace();
 
         JOptionPane.showMessageDialog(
                 this,
-                "Request " + request.id
-                        + " updated to " + nextStatus + ".");
+                message + "\nCheck your database connection.\n\n"
+                        + ex.getMessage(),
+                "Database Error",
+                JOptionPane.ERROR_MESSAGE);
     }
 
     private static class StatusRenderer
@@ -428,38 +601,34 @@ public class MaintenanceStaffFrame extends JFrame {
             setHorizontalAlignment(SwingConstants.CENTER);
             setFont(new Font("SansSerif", Font.BOLD, 11));
 
-            if (!isSelected && value != null) {
-                String status = value.toString();
-
-                switch (status) {
-                    case "APPROVED":
-                        component.setBackground(
-                                new Color(225, 239, 225));
-                        component.setForeground(
-                                new Color(45, 105, 60));
-                        break;
-
-                    case "IN_PROGRESS":
-                        component.setBackground(
-                                new Color(255, 241, 205));
-                        component.setForeground(
-                                new Color(145, 100, 20));
-                        break;
-
-                    case "COMPLETED":
-                        component.setBackground(
-                                new Color(220, 235, 245));
-                        component.setForeground(
-                                new Color(40, 90, 130));
-                        break;
-
-                    default:
-                        component.setBackground(WHITE);
-                        component.setForeground(TEXT);
-                }
-            } else if (isSelected) {
+            if (isSelected) {
                 component.setBackground(LIGHT_GREEN);
                 component.setForeground(TEXT);
+            } else {
+                setBackground(WHITE);
+                setForeground(TEXT);
+
+                if (value != null) {
+                    switch (value.toString()) {
+                        case "ASSIGNED":
+                            setBackground(new Color(225, 239, 225));
+                            setForeground(new Color(45, 105, 60));
+                            break;
+
+                        case "IN PROGRESS":
+                            setBackground(new Color(255, 241, 205));
+                            setForeground(new Color(145, 100, 20));
+                            break;
+
+                        case "COMPLETED":
+                            setBackground(new Color(220, 235, 245));
+                            setForeground(new Color(40, 90, 130));
+                            break;
+
+                        default:
+                            break;
+                    }
+                }
             }
 
             return component;

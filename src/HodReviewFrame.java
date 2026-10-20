@@ -3,6 +3,12 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class HodReviewFrame extends JFrame {
 
@@ -36,7 +42,7 @@ public class HodReviewFrame extends JFrame {
         sidebar.setBackground(DARK_GREEN);
         sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
         sidebar.setBorder(
-            BorderFactory.createEmptyBorder(25, 18, 20, 18)
+                BorderFactory.createEmptyBorder(25, 18, 20, 18)
         );
 
         JLabel brand = new JLabel("CampusCare");
@@ -60,16 +66,14 @@ public class HodReviewFrame extends JFrame {
         sidebar.add(Box.createVerticalStrut(15));
 
         JButton dashboardButton =
-            createSidebarButton("Dashboard", false);
-
+                createSidebarButton("Dashboard", false);
         dashboardButton.addActionListener(e -> goToDashboard());
         sidebar.add(dashboardButton);
 
         sidebar.add(Box.createVerticalStrut(10));
 
         JButton reviewButton =
-            createSidebarButton("Review Requests", true);
-
+                createSidebarButton("Review Requests", true);
         reviewButton.addActionListener(e -> refreshTable());
         sidebar.add(reviewButton);
 
@@ -78,20 +82,17 @@ public class HodReviewFrame extends JFrame {
         JLabel profile = new JLabel("Head of Department");
         profile.setFont(new Font("Arial", Font.BOLD, 13));
         profile.setForeground(WHITE);
-
         sidebar.add(profile);
         sidebar.add(Box.createVerticalStrut(8));
 
         JLabel emailLabel = new JLabel(hodEmail);
         emailLabel.setFont(new Font("Arial", Font.PLAIN, 11));
         emailLabel.setForeground(new Color(215, 230, 215));
-
         sidebar.add(emailLabel);
         sidebar.add(Box.createVerticalStrut(18));
 
         JButton logoutButton =
-            createSidebarButton("Log Out", false);
-
+                createSidebarButton("Log Out", false);
         logoutButton.addActionListener(e -> logout());
         sidebar.add(logoutButton);
 
@@ -99,7 +100,7 @@ public class HodReviewFrame extends JFrame {
         JPanel content = new JPanel(new BorderLayout(0, 20));
         content.setBackground(BACKGROUND);
         content.setBorder(
-            BorderFactory.createEmptyBorder(30, 30, 28, 30)
+                BorderFactory.createEmptyBorder(30, 30, 28, 30)
         );
 
         JLabel title = new JLabel("Review Maintenance Requests");
@@ -107,7 +108,7 @@ public class HodReviewFrame extends JFrame {
         title.setForeground(TEXT_COLOR);
 
         JLabel subtitle = new JLabel(
-            "Approve or reject pending campus maintenance requests."
+                "Approve, reject, or assign campus maintenance requests."
         );
         subtitle.setFont(new Font("Arial", Font.PLAIN, 14));
         subtitle.setForeground(new Color(115, 125, 115));
@@ -125,26 +126,25 @@ public class HodReviewFrame extends JFrame {
         JPanel tablePanel = new JPanel(new BorderLayout(0, 15));
         tablePanel.setBackground(WHITE);
         tablePanel.setBorder(
-            BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(BORDER_COLOR),
-                BorderFactory.createEmptyBorder(18, 18, 18, 18)
-            )
+                BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(BORDER_COLOR),
+                        BorderFactory.createEmptyBorder(18, 18, 18, 18)
+                )
         );
 
         JLabel tableTitle = new JLabel("Submitted Requests");
         tableTitle.setFont(new Font("Arial", Font.BOLD, 18));
         tableTitle.setForeground(TEXT_COLOR);
-
         tablePanel.add(tableTitle, BorderLayout.NORTH);
 
         String[] columns = {
-            "Request ID",
-            "Submitted By",
-            "Role",
-            "Location",
-            "Category",
-            "Description",
-            "Status"
+                "Request ID",
+                "Submitted By",
+                "Role",
+                "Location",
+                "Category",
+                "Description",
+                "Status"
         };
 
         model = new DefaultTableModel(columns, 0) {
@@ -164,17 +164,17 @@ public class HodReviewFrame extends JFrame {
         requestTable.setSelectionBackground(LIGHT_SAGE);
         requestTable.setSelectionForeground(DARK_GREEN);
         requestTable.setSelectionMode(
-            ListSelectionModel.SINGLE_SELECTION
+                ListSelectionModel.SINGLE_SELECTION
         );
         requestTable.setAutoCreateRowSorter(true);
 
         requestTable.getTableHeader().setFont(
-            new Font("Arial", Font.BOLD, 12)
+                new Font("Arial", Font.BOLD, 12)
         );
         requestTable.getTableHeader().setBackground(LIGHT_SAGE);
         requestTable.getTableHeader().setForeground(DARK_GREEN);
         requestTable.getTableHeader().setPreferredSize(
-            new Dimension(0, 40)
+                new Dimension(0, 40)
         );
         requestTable.getTableHeader().setReorderingAllowed(false);
 
@@ -182,103 +182,102 @@ public class HodReviewFrame extends JFrame {
 
         for (int i = 0; i < widths.length; i++) {
             requestTable.getColumnModel()
-                .getColumn(i).setPreferredWidth(widths[i]);
+                    .getColumn(i).setPreferredWidth(widths[i]);
         }
 
         // STATUS CELL COLOURS
         requestTable.getColumnModel().getColumn(6).setCellRenderer(
-            new DefaultTableCellRenderer() {
-                @Override
-                public Component getTableCellRendererComponent(
-                    JTable table,
-                    Object value,
-                    boolean selected,
-                    boolean focus,
-                    int row,
-                    int column
-                ) {
-                    JLabel label = (JLabel)
-                        super.getTableCellRendererComponent(
-                            table, value, selected, focus, row, column
+                new DefaultTableCellRenderer() {
+                    @Override
+                    public Component getTableCellRendererComponent(
+                            JTable table,
+                            Object value,
+                            boolean selected,
+                            boolean focus,
+                            int row,
+                            int column
+                    ) {
+                        JLabel label = (JLabel)
+                                super.getTableCellRendererComponent(
+                                        table, value, selected, focus,
+                                        row, column
+                                );
+
+                        label.setHorizontalAlignment(
+                                SwingConstants.CENTER
+                        );
+                        label.setFont(
+                                new Font("Arial", Font.BOLD, 11)
                         );
 
-                    label.setHorizontalAlignment(
-                        SwingConstants.CENTER
-                    );
-                    label.setFont(
-                        new Font("Arial", Font.BOLD, 11)
-                    );
+                        if (!selected) {
+                            String status = value == null
+                                    ? "" : value.toString();
 
-                    if (!selected) {
-                        String status = value == null
-                            ? "" : value.toString();
-
-                        if (status.equalsIgnoreCase("PENDING")) {
-                            label.setBackground(
-                                new Color(255, 244, 214)
-                            );
-                            label.setForeground(
-                                new Color(145, 100, 20)
-                            );
-                        } else if (
-                            status.equalsIgnoreCase("APPROVED")
-                        ) {
-                            label.setBackground(
-                                new Color(222, 240, 222)
-                            );
-                            label.setForeground(
-                                new Color(40, 105, 55)
-                            );
-                        } else if (
-                            status.equalsIgnoreCase("REJECTED")
-                        ) {
-                            label.setBackground(
-                                new Color(250, 225, 225)
-                            );
-                            label.setForeground(
-                                new Color(160, 45, 45)
-                            );
-                        } else {
-                            label.setBackground(WHITE);
-                            label.setForeground(TEXT_COLOR);
+                            if (status.equalsIgnoreCase("PENDING")) {
+                                label.setBackground(
+                                        new Color(255, 244, 214)
+                                );
+                                label.setForeground(
+                                        new Color(145, 100, 20)
+                                );
+                            } else if (
+                                    status.equalsIgnoreCase("APPROVED")) {
+                                label.setBackground(
+                                        new Color(222, 240, 222)
+                                );
+                                label.setForeground(
+                                        new Color(40, 105, 55)
+                                );
+                            } else if (
+                                    status.equalsIgnoreCase("REJECTED")) {
+                                label.setBackground(
+                                        new Color(250, 225, 225)
+                                );
+                                label.setForeground(
+                                        new Color(160, 45, 45)
+                                );
+                            } else {
+                                label.setBackground(WHITE);
+                                label.setForeground(TEXT_COLOR);
+                            }
                         }
-                    }
 
-                    return label;
+                        return label;
+                    }
                 }
-            }
         );
 
         tablePanel.add(
-            new JScrollPane(requestTable),
-            BorderLayout.CENTER
+                new JScrollPane(requestTable),
+                BorderLayout.CENTER
         );
 
         // ACTION BUTTONS
         JPanel buttons = new JPanel(
-            new FlowLayout(FlowLayout.RIGHT, 10, 0)
+                new FlowLayout(FlowLayout.RIGHT, 8, 0)
         );
         buttons.setBackground(WHITE);
 
         JButton refreshButton = new JButton("Refresh");
         JButton approveButton = new JButton("Approve Request");
         JButton rejectButton = new JButton("Reject Request");
+        JButton assignButton = new JButton("Assign Staff");
 
         styleSecondaryButton(refreshButton);
         stylePrimaryButton(approveButton);
         styleRejectButton(rejectButton);
+        stylePrimaryButton(assignButton);
 
         refreshButton.addActionListener(e -> refreshTable());
-        approveButton.addActionListener(
-            e -> updateStatus("APPROVED")
-        );
-        rejectButton.addActionListener(
-            e -> updateStatus("REJECTED")
-        );
+        approveButton.addActionListener(e -> updateStatus("APPROVED"));
+        rejectButton.addActionListener(e -> updateStatus("REJECTED"));
+        assignButton.addActionListener(e -> assignSelectedRequest());
 
         buttons.add(refreshButton);
         buttons.add(rejectButton);
         buttons.add(approveButton);
+        buttons.add(assignButton);
 
         tablePanel.add(buttons, BorderLayout.SOUTH);
         content.add(tablePanel, BorderLayout.CENTER);
@@ -292,95 +291,299 @@ public class HodReviewFrame extends JFrame {
         setVisible(true);
     }
 
-    // Load requests from the shared RequestStore
+    // Load actual requests from MySQL
     private void refreshTable() {
         model.setRowCount(0);
 
-        for (RequestStore.RequestItem request
-                : RequestStore.getRequests()) {
+        String sql =
+                "SELECT mr.request_id, u.email, u.role, " +
+                "mr.department, mr.room, mr.category, " +
+                "mr.description, mr.status " +
+                "FROM maintenance_requests mr " +
+                "JOIN users u ON mr.submitted_by = u.user_id " +
+                "ORDER BY mr.request_id DESC";
 
-            model.addRow(new Object[] {
-                request.id,
-                request.email,
-                request.role,
-                request.department,
-                request.category,
-                request.description,
-                request.status
-            });
+        try (
+                Connection con =
+                        DatabaseConnection.getInstance().getConnection();
+                PreparedStatement ps = con.prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()
+        ) {
+            while (rs.next()) {
+                String status = rs.getString("status");
+
+                if ("SUBMITTED".equalsIgnoreCase(status)) {
+                    status = "PENDING";
+                }
+
+                model.addRow(new Object[]{
+                        rs.getInt("request_id"),
+                        rs.getString("email"),
+                        rs.getString("role"),
+                        rs.getString("room"),
+                        rs.getString("category"),
+                        rs.getString("description"),
+                        status
+                });
+            }
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Could not load requests from MySQL.\n"
+                            + e.getMessage(),
+                    "Database Error",
+                    JOptionPane.ERROR_MESSAGE
+            );
         }
     }
 
-    // Approve or reject the selected request
+    // Approve or reject a pending request
     private void updateStatus(String newStatus) {
         int selectedRow = requestTable.getSelectedRow();
 
         if (selectedRow == -1) {
             JOptionPane.showMessageDialog(
-                this,
-                "Please select a request first.",
-                "No Request Selected",
-                JOptionPane.WARNING_MESSAGE
+                    this,
+                    "Please select a request first.",
+                    "No Request Selected",
+                    JOptionPane.WARNING_MESSAGE
             );
             return;
         }
 
         int modelRow =
-            requestTable.convertRowIndexToModel(selectedRow);
+                requestTable.convertRowIndexToModel(selectedRow);
 
-        String requestId =
-            model.getValueAt(modelRow, 0).toString();
+        int requestId = Integer.parseInt(
+                model.getValueAt(modelRow, 0).toString()
+        );
 
-        RequestStore.RequestItem request =
-            RequestStore.findById(requestId);
+        String currentStatus =
+                model.getValueAt(modelRow, 6).toString();
 
-        if (request == null) {
+        if (!currentStatus.equalsIgnoreCase("PENDING")) {
             JOptionPane.showMessageDialog(
-                this,
-                "The request could not be found.",
-                "Request Not Found",
-                JOptionPane.ERROR_MESSAGE
-            );
-
-            refreshTable();
-            return;
-        }
-
-        if (!request.status.equalsIgnoreCase("PENDING")) {
-            JOptionPane.showMessageDialog(
-                this,
-                "Only PENDING requests can be approved or rejected.",
-                "Action Not Allowed",
-                JOptionPane.INFORMATION_MESSAGE
+                    this,
+                    "Only pending requests can be approved or rejected.",
+                    "Action Not Allowed",
+                    JOptionPane.INFORMATION_MESSAGE
             );
             return;
         }
 
         String action = newStatus.equals("APPROVED")
-            ? "approve" : "reject";
+                ? "approve" : "reject";
 
         int choice = JOptionPane.showConfirmDialog(
-            this,
-            "Are you sure you want to " + action
-                + " request " + request.id + "?",
-            "Confirm Decision",
-            JOptionPane.YES_NO_OPTION
+                this,
+                "Are you sure you want to " + action
+                        + " request REQ-" + requestId + "?",
+                "Confirm Decision",
+                JOptionPane.YES_NO_OPTION
         );
 
         if (choice != JOptionPane.YES_OPTION) {
             return;
         }
 
-        request.status = newStatus;
+        String sql =
+                "UPDATE maintenance_requests " +
+                "SET status = ? " +
+                "WHERE request_id = ? AND status = 'SUBMITTED'";
 
-        refreshTable();
+        try (
+                Connection con =
+                        DatabaseConnection.getInstance().getConnection();
+                PreparedStatement ps = con.prepareStatement(sql)
+        ) {
+            ps.setString(1, newStatus);
+            ps.setInt(2, requestId);
 
-        JOptionPane.showMessageDialog(
-            this,
-            "Request " + request.id + " is now " + newStatus + ".",
-            "Status Updated",
-            JOptionPane.INFORMATION_MESSAGE
+            int rowsUpdated = ps.executeUpdate();
+
+            if (rowsUpdated == 1) {
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Request REQ-" + requestId
+                                + " is now " + newStatus + ".",
+                        "Status Updated",
+                        JOptionPane.INFORMATION_MESSAGE
+                );
+            } else {
+                JOptionPane.showMessageDialog(
+                        this,
+                        "The request may have already been updated. "
+                                + "Refresh and try again.",
+                        "Request Not Updated",
+                        JOptionPane.WARNING_MESSAGE
+                );
+            }
+
+            refreshTable();
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Could not update the request status in MySQL.\n"
+                            + e.getMessage(),
+                    "Database Error",
+                    JOptionPane.ERROR_MESSAGE
+            );
+        }
+    }
+
+    // Assign an approved request to a maintenance staff member
+    private void assignSelectedRequest() {
+        int selectedRow = requestTable.getSelectedRow();
+
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Please select a request first.",
+                    "No Request Selected",
+                    JOptionPane.WARNING_MESSAGE
+            );
+            return;
+        }
+
+        int row = requestTable.convertRowIndexToModel(selectedRow);
+
+        int requestId = Integer.parseInt(
+                model.getValueAt(row, 0).toString()
         );
+
+        String status = model.getValueAt(row, 6).toString();
+
+        if (!status.equalsIgnoreCase("APPROVED")) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Only approved requests can be assigned to staff.",
+                    "Assignment Not Allowed",
+                    JOptionPane.WARNING_MESSAGE
+            );
+            return;
+        }
+
+        String sql =
+                "SELECT user_id, name, email " +
+                "FROM users " +
+                "WHERE role = 'MAINTENANCE_STAFF' " +
+                "ORDER BY name";
+
+        List<Integer> staffIds = new ArrayList<>();
+        List<String> staffLabels = new ArrayList<>();
+
+        try (
+                Connection con =
+                        DatabaseConnection.getInstance().getConnection();
+                PreparedStatement ps = con.prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()
+        ) {
+            while (rs.next()) {
+                staffIds.add(rs.getInt("user_id"));
+
+                staffLabels.add(
+                        rs.getString("name") + " (" +
+                        rs.getString("email") + ")"
+                );
+            }
+
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Could not load maintenance staff.\n"
+                            + ex.getMessage(),
+                    "Database Error",
+                    JOptionPane.ERROR_MESSAGE
+            );
+            return;
+        }
+
+        if (staffIds.isEmpty()) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "No maintenance staff accounts were found.",
+                    "No Staff Available",
+                    JOptionPane.INFORMATION_MESSAGE
+            );
+            return;
+        }
+
+        JComboBox<String> staffBox =
+                new JComboBox<>(staffLabels.toArray(new String[0]));
+
+        int choice = JOptionPane.showConfirmDialog(
+                this,
+                staffBox,
+                "Assign Request REQ-" + requestId + " to Staff",
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.QUESTION_MESSAGE
+        );
+
+        if (choice != JOptionPane.OK_OPTION) {
+            return;
+        }
+
+        int selectedStaffIndex = staffBox.getSelectedIndex();
+        int staffId = staffIds.get(selectedStaffIndex);
+
+        int confirm = JOptionPane.showConfirmDialog(
+                this,
+                "Assign request REQ-" + requestId + " to "
+                        + staffLabels.get(selectedStaffIndex) + "?",
+                "Confirm Assignment",
+                JOptionPane.YES_NO_OPTION
+        );
+
+        if (confirm != JOptionPane.YES_OPTION) {
+            return;
+        }
+
+        try {
+            MaintenanceRequestDAO dao = new MaintenanceRequestDAO();
+
+            int hodId = dao.getUserIdByEmail(hodEmail);
+
+            if (hodId == -1) {
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Could not identify the logged-in HOD account.",
+                        "Assignment Failed",
+                        JOptionPane.ERROR_MESSAGE
+                );
+                return;
+            }
+
+            dao.assignStaff(
+                    requestId,
+                    staffId,
+                    hodId,
+                    "Assigned by HOD"
+            );
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Request REQ-" + requestId
+                            + " has been assigned to "
+                            + staffLabels.get(selectedStaffIndex) + ".",
+                    "Assignment Successful",
+                    JOptionPane.INFORMATION_MESSAGE
+            );
+
+            refreshTable();
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Could not assign the request.\n"
+                            + ex.getMessage(),
+                    "Assignment Failed",
+                    JOptionPane.ERROR_MESSAGE
+            );
+        }
     }
 
     // Return to the HOD dashboard
@@ -390,30 +593,62 @@ public class HodReviewFrame extends JFrame {
     }
 
     public static int getTotalRequestCount() {
-        return RequestStore.getTotalCount();
+        return getCount(
+                "SELECT COUNT(*) FROM maintenance_requests"
+        );
     }
 
     public static int getPendingRequestCount() {
-        return RequestStore.countStatus("PENDING");
+        return getCount(
+                "SELECT COUNT(*) FROM maintenance_requests " +
+                "WHERE status = 'SUBMITTED'"
+        );
     }
 
     public static int getApprovedRequestCount() {
-        return RequestStore.countStatus("APPROVED");
+        return getCount(
+                "SELECT COUNT(*) FROM maintenance_requests " +
+                "WHERE status = 'APPROVED'"
+        );
     }
 
     public static int getCompletedRequestCount() {
-        return RequestStore.countStatus("COMPLETED");
+        return getCount(
+                "SELECT COUNT(*) FROM maintenance_requests " +
+                "WHERE status = 'COMPLETED'"
+        );
+    }
+
+    private static int getCount(String sql) {
+        try (
+                Connection con =
+                        DatabaseConnection.getInstance().getConnection();
+                PreparedStatement ps = con.prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()
+        ) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+
+        } catch (SQLException e) {
+            System.out.println(
+                    "Could not retrieve request count: "
+                            + e.getMessage()
+            );
+        }
+
+        return 0;
     }
 
     private JButton createSidebarButton(
-        String text,
-        boolean active
+            String text,
+            boolean active
     ) {
         JButton button = new JButton(text);
         button.setFont(new Font("Arial", Font.BOLD, 13));
         button.setForeground(WHITE);
         button.setBackground(
-            active ? new Color(75, 108, 80) : DARK_GREEN
+                active ? new Color(75, 108, 80) : DARK_GREEN
         );
         button.setHorizontalAlignment(SwingConstants.LEFT);
         button.setFocusPainted(false);
@@ -448,7 +683,7 @@ public class HodReviewFrame extends JFrame {
         button.setFont(new Font("Arial", Font.BOLD, 12));
         button.setFocusPainted(false);
         button.setBorder(
-            BorderFactory.createEmptyBorder(11, 16, 11, 16)
+                BorderFactory.createEmptyBorder(11, 16, 11, 16)
         );
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
     }
