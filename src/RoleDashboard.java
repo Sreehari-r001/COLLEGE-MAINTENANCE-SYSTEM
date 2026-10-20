@@ -66,6 +66,7 @@ public class RoleDashboard extends JFrame {
         sidebar.add(Box.createVerticalStrut(45));
 
         addSidebarButton(sidebar, "Dashboard", this::showDashboard);
+        addSidebarButton(sidebar, "Reports", () -> new MaintenanceReportFrame());
 
         if (role.equalsIgnoreCase("Faculty")) {
             addSidebarButton(sidebar, "My Requests", () -> {
