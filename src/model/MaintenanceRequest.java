@@ -25,7 +25,7 @@ public class MaintenanceRequest {
         System.out.println("Category: " + category);
 
         if (description == null || description.trim().isEmpty()) {
-            System.out.println("Description Not given");
+            System.out.println("Description: Not provided");
         } else {
             System.out.println("Description: " + description);
         }
@@ -54,8 +54,8 @@ public class MaintenanceRequest {
         this.status = "Assigned";
         System.out.println("Staff assigned successfully.");
     } else {
-        System.out.println("request not approved yet.");
-      }
+        System.out.println("Only approved requests can be assigned.");
+    }
 }
 
     public void startWork() {
@@ -63,7 +63,7 @@ public class MaintenanceRequest {
             status = "In Progress";
             System.out.println("Maintenance work started.");
         } else {
-            System.out.println("Request not assigned.");
+            System.out.println("Request must be assigned first.");
         }
     }
 }

@@ -1,5 +1,4 @@
 package model;
-
 public class MaintenanceStaff extends User {
     private String assignedSection;
 
