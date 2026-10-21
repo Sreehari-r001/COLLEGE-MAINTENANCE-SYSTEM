@@ -71,13 +71,23 @@ public class HodReviewFrame extends JFrame {
         sidebar.add(dashboardButton);
 
         sidebar.add(Box.createVerticalStrut(10));
+     
+JButton reviewButton =
+        createSidebarButton("Review Requests", true);
+reviewButton.addActionListener(e -> refreshTable());
+sidebar.add(reviewButton);
 
-        JButton reviewButton =
-                createSidebarButton("Review Requests", true);
-        reviewButton.addActionListener(e -> refreshTable());
-        sidebar.add(reviewButton);
+sidebar.add(Box.createVerticalStrut(10));
 
-        sidebar.add(Box.createVerticalGlue());
+JButton reportsButton =
+        createSidebarButton("Maintenance Reports", false);
+reportsButton.addActionListener(e ->
+        new MaintenanceReportFrame()
+);
+sidebar.add(reportsButton);
+
+sidebar.add(Box.createVerticalGlue());
+
 
         JLabel profile = new JLabel("Head of Department");
         profile.setFont(new Font("Arial", Font.BOLD, 13));
