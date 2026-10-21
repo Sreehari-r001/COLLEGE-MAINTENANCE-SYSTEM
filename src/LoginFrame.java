@@ -199,11 +199,13 @@ public class LoginFrame extends JFrame {
         panel.add(field);
     }
 
-    // Verify that the email exists and its role matches the selection.
+    // Verify email, password, and selected role.
     private void login() {
         String email = emailField.getText().trim();
-        String password =
-                new String(passwordField.getPassword()).trim();
+
+        // Do not trim the password; spaces can be part of a password.
+        String password = new String(passwordField.getPassword());
+
         String role = (String) roleBox.getSelectedItem();
 
         if (email.isEmpty() || password.isEmpty()) {
@@ -228,7 +230,9 @@ public class LoginFrame extends JFrame {
         }
 
         String sql =
-                "SELECT role FROM users WHERE LOWER(email) = LOWER(?)";
+                "SELECT role FROM users "
+                        + "WHERE LOWER(email) = LOWER(?) "
+                        + "AND password_hash = ?";
 
         try {
             Connection connection =
@@ -238,15 +242,16 @@ public class LoginFrame extends JFrame {
                          connection.prepareStatement(sql)) {
 
                 statement.setString(1, email);
+                statement.setString(2, password);
 
                 try (ResultSet result = statement.executeQuery()) {
 
+                    // Email and password must both match.
                     if (!result.next()) {
                         JOptionPane.showMessageDialog(
                                 this,
-                                "This email is not registered. "
-                                        + "Please use a registered college email.",
-                                "Account Not Found",
+                                "Invalid email or password.",
+                                "Login Failed",
                                 JOptionPane.WARNING_MESSAGE
                         );
                         return;
@@ -254,6 +259,7 @@ public class LoginFrame extends JFrame {
 
                     String databaseRole = result.getString("role");
 
+                    // The selected role must also match the account.
                     if (!matchesRole(role, databaseRole)) {
                         JOptionPane.showMessageDialog(
                                 this,
@@ -268,14 +274,14 @@ public class LoginFrame extends JFrame {
                 }
             }
 
-            // Open the correct dashboard after checking the account.
-            dispose();
-
+            // Open the correct dashboard after successful verification.
             if ("Student".equalsIgnoreCase(role)) {
                 new StudentDashboard(email);
             } else {
                 new RoleDashboard(role, email);
             }
+
+            dispose();
 
         } catch (SQLException ex) {
             ex.printStackTrace();
@@ -283,8 +289,7 @@ public class LoginFrame extends JFrame {
             JOptionPane.showMessageDialog(
                     this,
                     "Unable to verify your account in the database.\n"
-                            + "Please check the database connection.\n\n"
-                            + ex.getMessage(),
+                            + "Please check the database connection.",
                     "Database Error",
                     JOptionPane.ERROR_MESSAGE
             );
@@ -310,4 +315,3 @@ public class LoginFrame extends JFrame {
         SwingUtilities.invokeLater(() -> new LoginFrame());
     }
 }
-
