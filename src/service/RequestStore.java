@@ -14,7 +14,7 @@ public class RequestStore {
         public String description;
         public String status;
 
-        // Constructor for existing sample requests
+        // Constructor for existing sample-request format
         public RequestItem(
                 String id,
                 String department,
@@ -22,8 +22,16 @@ public class RequestStore {
                 String description,
                 String status
         ) {
-            this(id, "-", "-", "-", department,
-                    category, description, status);
+            this(
+                    id,
+                    "-",
+                    "-",
+                    "-",
+                    department,
+                    category,
+                    description,
+                    status
+            );
         }
 
         // Constructor for newly submitted requests
@@ -48,46 +56,28 @@ public class RequestStore {
         }
     }
 
+    // Start with an empty request list.
+    // No hardcoded sample requests are created.
     private static final ArrayList<RequestItem> requests =
             new ArrayList<>();
-
-    static {
-        requests.add(new RequestItem(
-                "REQ-001",
-                "CSE",
-                "Electrical",
-                "Fan not working",
-                "PENDING"
-        ));
-
-        requests.add(new RequestItem(
-                "REQ-002",
-                "ECE",
-                "Plumbing",
-                "Water leakage",
-                "PENDING"
-        ));
-
-        requests.add(new RequestItem(
-                "REQ-003",
-                "Mechanical",
-                "Furniture",
-                "Broken chair",
-                "APPROVED"
-        ));
-    }
 
     public static List<RequestItem> getRequests() {
         return requests;
     }
 
     public static void addRequest(RequestItem request) {
-        requests.add(request);
+        if (request != null) {
+            requests.add(request);
+        }
     }
 
     public static RequestItem findById(String id) {
+        if (id == null) {
+            return null;
+        }
+
         for (RequestItem request : requests) {
-            if (request.id.equals(id)) {
+            if (id.equals(request.id)) {
                 return request;
             }
         }
@@ -96,10 +86,15 @@ public class RequestStore {
     }
 
     public static int countStatus(String status) {
+        if (status == null) {
+            return 0;
+        }
+
         int count = 0;
 
         for (RequestItem request : requests) {
-            if (request.status.equalsIgnoreCase(status)) {
+            if (request.status != null
+                    && status.equalsIgnoreCase(request.status)) {
                 count++;
             }
         }
